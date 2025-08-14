@@ -57,10 +57,10 @@ fn main() -> Result<(), String> {
                 if x as usize / DOT_SIZE_IN_PXS < GRID_X_SIZE
                     && y as usize / DOT_SIZE_IN_PXS < GRID_Y_SIZE
                 {
-                    context.add_particle(
-                        ParticleType::Sand,
-                        Point(x / DOT_SIZE_IN_PXS as i32, y / DOT_SIZE_IN_PXS as i32),
-                    );
+                    context.add_particle(Point(
+                        x / DOT_SIZE_IN_PXS as i32,
+                        y / DOT_SIZE_IN_PXS as i32,
+                    ));
                 }
             }
 

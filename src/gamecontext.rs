@@ -25,7 +25,7 @@ pub struct GameContext {
     to_update: BinaryHeap<Point>,
     to_update_set: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
-    pub placing_particle: ParticleType
+    pub placing_particle: ParticleType,
 }
 
 impl Default for GameContext {
@@ -34,7 +34,7 @@ impl Default for GameContext {
             to_update: BinaryHeap::new(),
             to_update_set: HashSet::new(),
             grid: [[Particle::default(); GRID_X_SIZE]; GRID_Y_SIZE],
-            placing_particle: ParticleType::Sand
+            placing_particle: ParticleType::Sand,
         }
     }
 }
@@ -48,7 +48,7 @@ impl GameContext {
         return match self.placing_particle {
             ParticleType::Sand => self.add_sand_particle(point),
             ParticleType::Air => true,
-        }
+        };
     }
 
     fn add_sand_particle(&mut self, point: Point) -> bool {
