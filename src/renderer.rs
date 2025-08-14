@@ -1,4 +1,4 @@
-use crate::{DOT_SIZE_IN_PXS, gamecontext::*, particle::*, point::*};
+use crate::{DOT_SIZE_IN_PXS, gamecontext::*, particle::ParticleType, point::*};
 
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -41,15 +41,15 @@ impl Renderer {
                     ParticleType::Sand => {
                         self.canvas.set_draw_color(Color::RED);
                         self.draw_dot(&Point(x as i32, y as i32))?;
-                    },
+                    }
                     ParticleType::Wall => {
                         self.canvas.set_draw_color(Color::GRAY);
                         self.draw_dot(&Point(x as i32, y as i32))?;
-                    },
+                    }
                     ParticleType::Concrete => {
                         self.canvas.set_draw_color(Color::BLACK);
                         self.draw_dot(&Point(x as i32, y as i32))?;
-                    },
+                    }
                 }
             }
         }

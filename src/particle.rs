@@ -53,7 +53,7 @@ impl Particle {
     pub fn concrete() -> Self {
         Self {
             particle_type: ParticleType::Concrete,
-            particle_physics: ParticlePhysics::None
+            particle_physics: ParticlePhysics::None,
         }
     }
 }

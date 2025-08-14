@@ -27,7 +27,9 @@ impl GameContext {
 
     pub fn add_particle(&mut self, point: Point) -> bool {
         match self.placing_particle.particle_type {
-            ParticleType::Sand | ParticleType::Wall | ParticleType::Concrete => self.place_particle(point),
+            ParticleType::Sand | ParticleType::Wall | ParticleType::Concrete => {
+                self.place_particle(point)
+            }
             ParticleType::Air => self.delete_particle(point),
         }
     }
@@ -43,7 +45,7 @@ impl GameContext {
             ParticleType::Concrete => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::concrete();
                 return true;
-            },
+            }
             ParticleType::Air => (),
         }
 
@@ -152,8 +154,7 @@ impl GameContext {
 
     fn propogate_updates(&mut self, point: &Point) {
         for d in -1..2 {
-            if let Some(p) = *point + Point(d, -1)
-            {
+            if let Some(p) = *point + Point(d, -1) {
                 if self.to_update_set.contains(&p) {
                     continue;
                 }
