@@ -52,58 +52,60 @@ impl GameContext {
 
     pub fn next_tick(&mut self) {
         let mut next_updates: BinaryHeap<Point> = BinaryHeap::new();
-        while !self.to_update.is_empty() {
-            let point = self.to_update.pop().unwrap();
-            if let Some(below) = point + Point(0, 1) {
-                if self.grid[below.1 as usize][below.0 as usize].particle_type == ParticleType::Air
-                {
-                    self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-                    self.grid[below.1 as usize][below.0 as usize].particle_type =
-                        ParticleType::Sand;
-                    next_updates.push(below);
-                    continue;
-                }
+        while let Some(point) = self.to_update.pop() {
+            if let Some(below) = point + Point(0, 1)
+                && self.is_air(&below)
+            {
+                self.move_particle(&point, &below);
+                next_updates.push(below);
+                continue;
             }
 
-            let can_move_down_left = if let Some(left) = point + Point(-1, 1) {
-                self.grid[left.1 as usize][left.0 as usize].particle_type == ParticleType::Air
+            let down_left = if let Some(down_left) = point + Point(-1, 1)
+                && self.is_air(&down_left)
+            {
+                Some(down_left)
             } else {
-                false
+                None
             };
 
-            let can_move_down_right = if let Some(right) = point + Point(1, 1) {
-                self.grid[right.1 as usize][right.0 as usize].particle_type == ParticleType::Air
+            let down_right = if let Some(down_right) = point + Point(1, 1)
+                && self.is_air(&down_right)
+            {
+                Some(down_right)
             } else {
-                false
+                None
             };
 
-            if can_move_down_left && can_move_down_right {
+            if let Some(down_left) = down_left
+                && let Some(down_right) = down_right
+            {
                 let moveleft = fastrand::bool();
                 if moveleft {
-                    let left = (point + Point(-1, 1)).unwrap();
-                    self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-                    self.grid[left.1 as usize][left.0 as usize].particle_type = ParticleType::Sand;
-                    next_updates.push(left);
+                    self.move_particle(&point, &down_left);
+                    next_updates.push(down_left);
                 } else {
-                    let right = (point + Point(1, 1)).unwrap();
-                    self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-                    self.grid[right.1 as usize][right.0 as usize].particle_type =
-                        ParticleType::Sand;
-                    next_updates.push(right);
+                    self.move_particle(&point, &down_right);
+                    next_updates.push(down_right);
                 }
-            } else if can_move_down_left {
-                let left = (point + Point(-1, 1)).unwrap();
-                self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-                self.grid[left.1 as usize][left.0 as usize].particle_type = ParticleType::Sand;
-                next_updates.push(left);
-            } else if can_move_down_right {
-                let right = (point + Point(1, 1)).unwrap();
-                self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-                self.grid[right.1 as usize][right.0 as usize].particle_type = ParticleType::Sand;
-                next_updates.push(right);
+            } else if let Some(down_left) = down_left {
+                self.move_particle(&point, &down_left);
+                next_updates.push(down_left);
+            } else if let Some(down_right) = down_right {
+                self.move_particle(&point, &down_right);
+                next_updates.push(down_right);
             }
         }
 
         self.to_update = next_updates;
+    }
+
+    fn move_particle(&mut self, orig_point: &Point, new_point: &Point) {
+        self.grid[orig_point.1 as usize][orig_point.0 as usize].particle_type = ParticleType::Air;
+        self.grid[new_point.1 as usize][new_point.0 as usize].particle_type = ParticleType::Sand;
+    }
+
+    fn is_air(&self, point: &Point) -> bool {
+        self.grid[point.1 as usize][point.0 as usize].particle_type == ParticleType::Air
     }
 }
