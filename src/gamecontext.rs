@@ -62,10 +62,17 @@ impl GameContext {
         true
     }
 
+    // TODO improve deletion animation
     fn add_air_particle(&mut self, point: Point) -> bool {
-        self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-        self.to_update_set.remove(&point);
-        self.propogate_updates(&point);
+        match self.grid[point.1 as usize][point.0 as usize].particle_type {
+            ParticleType::Air => (),
+            ParticleType::Sand => {
+                self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
+                self.to_update_set.remove(&point);
+                self.propogate_updates(&point);
+            }
+        }
+
         true
     }
 
