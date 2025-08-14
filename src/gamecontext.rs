@@ -45,10 +45,10 @@ impl GameContext {
     }
 
     pub fn add_particle(&mut self, point: Point) -> bool {
-        return match self.placing_particle {
+        match self.placing_particle {
             ParticleType::Sand => self.add_sand_particle(point),
-            ParticleType::Air => true,
-        };
+            ParticleType::Air => self.add_air_particle(point),
+        }
     }
 
     fn add_sand_particle(&mut self, point: Point) -> bool {
@@ -62,15 +62,26 @@ impl GameContext {
         true
     }
 
+    fn add_air_particle(&mut self, point: Point) -> bool {
+        self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
+        self.to_update_set.remove(&point);
+        self.propogate_updates(&point);
+        true
+    }
+
     pub fn next_tick(&mut self) {
         let mut to_update: BinaryHeap<Point> = BinaryHeap::new();
         let mut to_update_set: HashSet<Point> = HashSet::new();
         while let Some(point) = self.to_update.pop() {
+            if !self.to_update_set.contains(&point) {
+                continue;
+            }
+
             if let Some(below) = point + Point(0, 1)
                 && self.is_air(&below)
             {
                 self.move_particle(&point, &below);
-                self.add_sand_updates(&below, &mut to_update, &mut to_update_set);
+                self.add_sand_updates(&point, &below, &mut to_update, &mut to_update_set);
                 continue;
             }
 
@@ -96,17 +107,17 @@ impl GameContext {
                 let move_left = fastrand::bool();
                 if move_left {
                     self.move_particle(&point, &down_left);
-                    self.add_sand_updates(&down_left, &mut to_update, &mut to_update_set);
+                    self.add_sand_updates(&point, &down_left, &mut to_update, &mut to_update_set);
                 } else {
                     self.move_particle(&point, &down_right);
-                    self.add_sand_updates(&down_right, &mut to_update, &mut to_update_set);
+                    self.add_sand_updates(&point, &down_right, &mut to_update, &mut to_update_set);
                 }
             } else if let Some(down_left) = down_left {
                 self.move_particle(&point, &down_left);
-                self.add_sand_updates(&down_left, &mut to_update, &mut to_update_set);
+                self.add_sand_updates(&point, &down_left, &mut to_update, &mut to_update_set);
             } else if let Some(down_right) = down_right {
                 self.move_particle(&point, &down_right);
-                self.add_sand_updates(&down_right, &mut to_update, &mut to_update_set);
+                self.add_sand_updates(&point, &down_right, &mut to_update, &mut to_update_set);
             }
         }
 
@@ -121,12 +132,17 @@ impl GameContext {
 
     fn add_sand_updates(
         &mut self,
-        point: &Point,
+        origin: &Point,
+        new_point: &Point,
         to_update: &mut BinaryHeap<Point>,
         to_update_set: &mut HashSet<Point>,
     ) {
-        to_update.push(*point);
-        to_update_set.insert(*point);
+        to_update.push(*new_point);
+        to_update_set.insert(*new_point);
+        self.propogate_updates(origin);
+    }
+
+    fn propogate_updates(&mut self, point: &Point) {
         for d in -1..2 {
             if let Some(p) = *point + Point(d, -1)
                 && self.grid[p.1 as usize][p.0 as usize].particle_type == ParticleType::Sand

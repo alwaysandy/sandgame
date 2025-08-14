@@ -43,6 +43,14 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(Keycode::A),
+                    ..
+                } => context.placing_particle = ParticleType::Air,
+                Event::KeyDown {
+                    keycode: Some(Keycode::S),
+                    ..
+                } => context.placing_particle = ParticleType::Sand,
                 Event::MouseButtonDown { .. } => mouse_down = true,
                 Event::MouseButtonUp { .. } => mouse_down = false,
                 _ => {}
@@ -51,20 +59,23 @@ fn main() -> Result<(), String> {
 
         frame_counter += 1;
         if frame_counter % 5 == 0 {
-            if mouse_down {
-                let x = event_pump.mouse_state().x();
-                let y = event_pump.mouse_state().y();
-                if x as usize / DOT_SIZE_IN_PXS < GRID_X_SIZE
-                    && y as usize / DOT_SIZE_IN_PXS < GRID_Y_SIZE
-                {
-                    context.add_particle(Point(
-                        x / DOT_SIZE_IN_PXS as i32,
-                        y / DOT_SIZE_IN_PXS as i32,
-                    ));
+            if frame_counter % 15 == 0 {
+                if mouse_down {
+                    let x = event_pump.mouse_state().x();
+                    let y = event_pump.mouse_state().y();
+                    if x as usize / DOT_SIZE_IN_PXS < GRID_X_SIZE
+                        && y as usize / DOT_SIZE_IN_PXS < GRID_Y_SIZE
+                    {
+                        context.add_particle(Point(
+                            x / DOT_SIZE_IN_PXS as i32,
+                            y / DOT_SIZE_IN_PXS as i32,
+                        ));
+                    }
                 }
+
+                frame_counter = 0;
             }
 
-            frame_counter = 0;
             context.next_tick();
         }
 

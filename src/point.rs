@@ -3,7 +3,7 @@ use crate::{GRID_X_SIZE, GRID_Y_SIZE};
 use std::cmp::Ordering;
 use std::ops::Add;
 
-#[derive(Clone, Copy, Debug, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Point(pub i32, pub i32);
 
 impl Add for Point {
@@ -33,11 +33,3 @@ impl PartialOrd for Point {
         Some(self.cmp(other))
     }
 }
-
-impl PartialEq for Point {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0 && self.1 == other.1
-    }
-}
-
-impl Eq for Point {}
