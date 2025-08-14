@@ -1,10 +1,11 @@
 extern crate sdl2;
 
 mod gamecontext;
+mod particle;
 mod point;
 mod renderer;
 
-use crate::{gamecontext::*, point::*, renderer::*};
+use crate::{gamecontext::*, particle::*, point::*, renderer::*};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;

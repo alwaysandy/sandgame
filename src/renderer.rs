@@ -1,4 +1,4 @@
-use crate::{DOT_SIZE_IN_PXS, gamecontext::*, point::*};
+use crate::{DOT_SIZE_IN_PXS, gamecontext::*, particle::*, point::*};
 
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
