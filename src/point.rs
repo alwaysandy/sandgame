@@ -1,9 +1,9 @@
 use crate::{GRID_X_SIZE, GRID_Y_SIZE};
-use std::ops::Add;
 
 use std::cmp::Ordering;
+use std::ops::Add;
 
-#[derive(Clone, Copy, Debug, Hash)]
+#[derive(Clone, Copy, Debug)]
 pub struct Point(pub i32, pub i32);
 
 impl Add for Point {
@@ -24,9 +24,7 @@ impl Add for Point {
 
 impl Ord for Point {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.1
-            .cmp(&other.1)
-            .then(self.0.cmp(&other.0))
+        self.1.cmp(&other.1).then(self.0.cmp(&other.0))
     }
 }
 
@@ -42,6 +40,4 @@ impl PartialEq for Point {
     }
 }
 
-impl Eq for Point {
-
-}
+impl Eq for Point {}

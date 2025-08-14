@@ -1,12 +1,11 @@
-use crate::{point::*, GRID_X_SIZE, GRID_Y_SIZE};
+use crate::{GRID_X_SIZE, GRID_Y_SIZE, point::*};
 
 use std::collections::BinaryHeap;
-use fastrand;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum ParticleType {
     Sand,
-    Air
+    Air,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -17,7 +16,7 @@ pub struct Particle {
 impl Default for Particle {
     fn default() -> Self {
         Particle {
-            particle_type: ParticleType::Air
+            particle_type: ParticleType::Air,
         }
     }
 }
@@ -53,12 +52,14 @@ impl GameContext {
 
     pub fn next_tick(&mut self) {
         let mut next_updates: BinaryHeap<Point> = BinaryHeap::new();
-        while self.to_update.len() > 0 {
+        while !self.to_update.is_empty() {
             let point = self.to_update.pop().unwrap();
             if let Some(below) = point + Point(0, 1) {
-                if self.grid[below.1 as usize][below.0 as usize].particle_type == ParticleType::Air {
+                if self.grid[below.1 as usize][below.0 as usize].particle_type == ParticleType::Air
+                {
                     self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-                    self.grid[below.1 as usize][below.0 as usize].particle_type = ParticleType::Sand;
+                    self.grid[below.1 as usize][below.0 as usize].particle_type =
+                        ParticleType::Sand;
                     next_updates.push(below);
                     continue;
                 }
@@ -86,7 +87,8 @@ impl GameContext {
                 } else {
                     let right = (point + Point(1, 1)).unwrap();
                     self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
-                    self.grid[right.1 as usize][right.0 as usize].particle_type = ParticleType::Sand;
+                    self.grid[right.1 as usize][right.0 as usize].particle_type =
+                        ParticleType::Sand;
                     next_updates.push(right);
                 }
             } else if can_move_down_left {

@@ -1,9 +1,9 @@
+use crate::{DOT_SIZE_IN_PXS, gamecontext::*, point::*};
+
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::WindowCanvas;
 use sdl2::video::Window;
-
-use crate::{DOT_SIZE_IN_PXS, gamecontext::*, point::*};
 
 pub struct Renderer {
     canvas: WindowCanvas,
@@ -28,7 +28,7 @@ impl Renderer {
 
     pub fn draw(&mut self, context: &GameContext) -> Result<(), String> {
         self.draw_background();
-        self.draw_particles(&context)?;
+        self.draw_particles(context)?;
         self.canvas.present();
         Ok(())
     }

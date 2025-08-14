@@ -1,12 +1,10 @@
 extern crate sdl2;
 
-mod renderer;
-mod point;
 mod gamecontext;
+mod point;
+mod renderer;
 
-use crate::renderer::*;
-use crate::gamecontext::*;
-use crate::point::*;
+use crate::{gamecontext::*, point::*, renderer::*};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -57,8 +55,13 @@ fn main() -> Result<(), String> {
             if mouse_down {
                 let x = event_pump.mouse_state().x();
                 let y = event_pump.mouse_state().y();
-                if x as usize / DOT_SIZE_IN_PXS < GRID_X_SIZE && y as usize / DOT_SIZE_IN_PXS < GRID_Y_SIZE {
-                    context.add_particle(ParticleType::Sand, Point(x / DOT_SIZE_IN_PXS as i32, y / DOT_SIZE_IN_PXS as i32));
+                if x as usize / DOT_SIZE_IN_PXS < GRID_X_SIZE
+                    && y as usize / DOT_SIZE_IN_PXS < GRID_Y_SIZE
+                {
+                    context.add_particle(
+                        ParticleType::Sand,
+                        Point(x / DOT_SIZE_IN_PXS as i32, y / DOT_SIZE_IN_PXS as i32),
+                    );
                 }
             }
 
