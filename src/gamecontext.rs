@@ -51,20 +51,6 @@ impl GameContext {
         true
     }
 
-    fn update_particles(&mut self, point: &Point) {
-        for i in -1..2 {
-            if let Some(new_point) = *point + Point(i, point.1 - 1) {
-                if self.grid[new_point.1 as usize][new_point.0 as usize].particle_type == ParticleType::Air {
-                    continue;
-                }
-
-                self.to_update.push(new_point);
-            }
-        }
-
-        self.to_update.push(*point);
-    }
-
     pub fn next_tick(&mut self) {
         let mut next_updates: BinaryHeap<Point> = BinaryHeap::new();
         while self.to_update.len() > 0 {
