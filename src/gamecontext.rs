@@ -80,8 +80,8 @@ impl GameContext {
             if let Some(down_left) = down_left
                 && let Some(down_right) = down_right
             {
-                let moveleft = fastrand::bool();
-                if moveleft {
+                let move_left = fastrand::bool();
+                if move_left {
                     self.move_particle(&point, &down_left);
                     to_update.push(down_left);
                 } else {
