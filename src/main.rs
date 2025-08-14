@@ -51,6 +51,10 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::S),
                     ..
                 } => context.placing_particle = Particle::sand(),
+                Event::KeyDown {
+                    keycode: Some(Keycode::W),
+                    ..
+                } => context.placing_particle = Particle::wall(),
                 Event::MouseButtonDown { .. } => mouse_down = true,
                 Event::MouseButtonUp { .. } => mouse_down = false,
                 _ => {}

@@ -34,12 +34,16 @@ impl Renderer {
     }
 
     fn draw_particles(&mut self, context: &GameContext) -> Result<(), String> {
-        self.canvas.set_draw_color(Color::RED);
         for (y, line) in context.grid.iter().enumerate() {
             for (x, particle) in line.iter().enumerate() {
                 match particle.particle_type {
                     ParticleType::Air => (),
                     ParticleType::Sand => {
+                        self.canvas.set_draw_color(Color::RED);
+                        self.draw_dot(&Point(x as i32, y as i32))?;
+                    },
+                    ParticleType::Wall => {
+                        self.canvas.set_draw_color(Color::GRAY);
                         self.draw_dot(&Point(x as i32, y as i32))?;
                     }
                 }

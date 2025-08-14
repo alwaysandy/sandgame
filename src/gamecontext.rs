@@ -6,18 +6,20 @@ use std::collections::{BinaryHeap, HashSet};
 pub enum ParticleType {
     Sand,
     Air,
+    Wall,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum ParticlePhysics {
     None,
-    Falling
+    Sand,
+    Wall,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Particle {
     pub particle_type: ParticleType,
-    particle_physics: ParticlePhysics
+    particle_physics: ParticlePhysics,
 }
 
 impl Default for Particle {
@@ -36,10 +38,18 @@ impl Particle {
             particle_physics: ParticlePhysics::None,
         }
     }
+
     pub fn sand() -> Self {
         Self {
             particle_type: ParticleType::Sand,
-            particle_physics: ParticlePhysics::Falling
+            particle_physics: ParticlePhysics::Sand,
+        }
+    }
+
+    pub fn wall() -> Self {
+        Self {
+            particle_type: ParticleType::Wall,
+            particle_physics: ParticlePhysics::Wall,
         }
     }
 }
@@ -69,27 +79,31 @@ impl GameContext {
 
     pub fn add_particle(&mut self, point: Point) -> bool {
         match self.placing_particle.particle_type {
-            ParticleType::Sand => self.add_sand_particle(point),
-            ParticleType::Air => self.add_air_particle(point),
+            ParticleType::Sand | ParticleType::Wall => self.place_particle(point),
+            ParticleType::Air => self.delete_particle(point),
         }
     }
 
-    fn add_sand_particle(&mut self, point: Point) -> bool {
+    fn place_particle(&mut self, point: Point) -> bool {
         if !self.is_air(&point) {
             return false;
         }
 
-        self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Sand;
+        match self.placing_particle.particle_type {
+            ParticleType::Air => (),
+            ParticleType::Wall => self.grid[point.1 as usize][point.0 as usize] = Particle::wall(),
+            ParticleType::Sand => self.grid[point.1 as usize][point.0 as usize] = Particle::sand(),
+        }
         self.to_update.push(point);
         self.to_update_set.insert(point);
         true
     }
 
     // TODO improve deletion animation
-    fn add_air_particle(&mut self, point: Point) -> bool {
+    fn delete_particle(&mut self, point: Point) -> bool {
         match self.grid[point.1 as usize][point.0 as usize].particle_type {
             ParticleType::Air => (),
-            ParticleType::Sand => {
+            ParticleType::Sand | ParticleType::Wall => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::air();
                 self.to_update_set.remove(&point);
                 self.propogate_updates(&point);
@@ -107,12 +121,22 @@ impl GameContext {
                 continue;
             }
 
+            match self.grid[point.1 as usize][point.0 as usize].particle_physics {
+                ParticlePhysics::Sand | ParticlePhysics::Wall => (),
+                _ => continue,
+            }
+
             if let Some(below) = point + Point(0, 1)
                 && self.is_air(&below)
             {
                 self.move_particle(&point, &below);
-                self.add_sand_updates(&point, &below, &mut to_update, &mut to_update_set);
+                self.add_updates(&point, &below, &mut to_update, &mut to_update_set);
                 continue;
+            }
+
+            match self.grid[point.1 as usize][point.0 as usize].particle_physics {
+                ParticlePhysics::Sand => (),
+                _ => continue,
             }
 
             let down_left = if let Some(down_left) = point + Point(-1, 1)
@@ -137,17 +161,17 @@ impl GameContext {
                 let move_left = fastrand::bool();
                 if move_left {
                     self.move_particle(&point, &down_left);
-                    self.add_sand_updates(&point, &down_left, &mut to_update, &mut to_update_set);
+                    self.add_updates(&point, &down_left, &mut to_update, &mut to_update_set);
                 } else {
                     self.move_particle(&point, &down_right);
-                    self.add_sand_updates(&point, &down_right, &mut to_update, &mut to_update_set);
+                    self.add_updates(&point, &down_right, &mut to_update, &mut to_update_set);
                 }
             } else if let Some(down_left) = down_left {
                 self.move_particle(&point, &down_left);
-                self.add_sand_updates(&point, &down_left, &mut to_update, &mut to_update_set);
+                self.add_updates(&point, &down_left, &mut to_update, &mut to_update_set);
             } else if let Some(down_right) = down_right {
                 self.move_particle(&point, &down_right);
-                self.add_sand_updates(&point, &down_right, &mut to_update, &mut to_update_set);
+                self.add_updates(&point, &down_right, &mut to_update, &mut to_update_set);
             }
         }
 
@@ -161,7 +185,7 @@ impl GameContext {
         self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
     }
 
-    fn add_sand_updates(
+    fn add_updates(
         &mut self,
         origin: &Point,
         new_point: &Point,
@@ -176,10 +200,14 @@ impl GameContext {
     fn propogate_updates(&mut self, point: &Point) {
         for d in -1..2 {
             if let Some(p) = *point + Point(d, -1)
-                && self.grid[p.1 as usize][p.0 as usize].particle_physics == ParticlePhysics::Falling
             {
                 if self.to_update_set.contains(&p) {
                     continue;
+                }
+
+                match self.grid[p.1 as usize][p.0 as usize].particle_physics {
+                    ParticlePhysics::Sand | ParticlePhysics::Wall => (),
+                    ParticlePhysics::None => continue,
                 }
 
                 self.to_update.push(p);
