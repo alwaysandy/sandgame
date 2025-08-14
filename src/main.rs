@@ -33,7 +33,6 @@ fn main() -> Result<(), String> {
     let mut event_pump = sdl_context.event_pump()?;
     let mut frame_counter = 0;
     let mut context = GameContext::new();
-
     let mut mouse_down = false;
 
     'running: loop {
@@ -70,7 +69,6 @@ fn main() -> Result<(), String> {
         }
 
         renderer.draw(&context)?;
-
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32) / 144);
     }
 

@@ -3,7 +3,7 @@ use crate::{GRID_X_SIZE, GRID_Y_SIZE};
 use std::cmp::Ordering;
 use std::ops::Add;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Hash)]
 pub struct Point(pub i32, pub i32);
 
 impl Add for Point {
