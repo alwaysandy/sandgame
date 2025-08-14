@@ -48,6 +48,10 @@ fn main() -> Result<(), String> {
                     ..
                 } => context.placing_particle = Particle::default(),
                 Event::KeyDown {
+                    keycode: Some(Keycode::C),
+                    ..
+                } => context.placing_particle = Particle::concrete(),
+                Event::KeyDown {
                     keycode: Some(Keycode::S),
                     ..
                 } => context.placing_particle = Particle::sand(),

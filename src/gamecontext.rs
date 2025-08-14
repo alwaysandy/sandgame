@@ -7,6 +7,7 @@ pub enum ParticleType {
     Sand,
     Air,
     Wall,
+    Concrete,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -52,6 +53,13 @@ impl Particle {
             particle_physics: ParticlePhysics::Wall,
         }
     }
+
+    pub fn concrete() -> Self {
+        Self {
+            particle_type: ParticleType::Concrete,
+            particle_physics: ParticlePhysics::None
+        }
+    }
 }
 
 pub struct GameContext {
@@ -79,7 +87,7 @@ impl GameContext {
 
     pub fn add_particle(&mut self, point: Point) -> bool {
         match self.placing_particle.particle_type {
-            ParticleType::Sand | ParticleType::Wall => self.place_particle(point),
+            ParticleType::Sand | ParticleType::Wall | ParticleType::Concrete => self.place_particle(point),
             ParticleType::Air => self.delete_particle(point),
         }
     }
@@ -90,10 +98,15 @@ impl GameContext {
         }
 
         match self.placing_particle.particle_type {
-            ParticleType::Air => (),
             ParticleType::Wall => self.grid[point.1 as usize][point.0 as usize] = Particle::wall(),
             ParticleType::Sand => self.grid[point.1 as usize][point.0 as usize] = Particle::sand(),
+            ParticleType::Concrete => {
+                self.grid[point.1 as usize][point.0 as usize] = Particle::concrete();
+                return true;
+            },
+            ParticleType::Air => (),
         }
+
         self.to_update.push(point);
         self.to_update_set.insert(point);
         true
@@ -103,7 +116,7 @@ impl GameContext {
     fn delete_particle(&mut self, point: Point) -> bool {
         match self.grid[point.1 as usize][point.0 as usize].particle_type {
             ParticleType::Air => (),
-            ParticleType::Sand | ParticleType::Wall => {
+            ParticleType::Sand | ParticleType::Wall | ParticleType::Concrete => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::air();
                 self.to_update_set.remove(&point);
                 self.propogate_updates(&point);

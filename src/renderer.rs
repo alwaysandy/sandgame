@@ -45,7 +45,11 @@ impl Renderer {
                     ParticleType::Wall => {
                         self.canvas.set_draw_color(Color::GRAY);
                         self.draw_dot(&Point(x as i32, y as i32))?;
-                    }
+                    },
+                    ParticleType::Concrete => {
+                        self.canvas.set_draw_color(Color::BLACK);
+                        self.draw_dot(&Point(x as i32, y as i32))?;
+                    },
                 }
             }
         }
