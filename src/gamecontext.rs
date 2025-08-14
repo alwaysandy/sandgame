@@ -51,13 +51,13 @@ impl GameContext {
     }
 
     pub fn next_tick(&mut self) {
-        let mut next_updates: BinaryHeap<Point> = BinaryHeap::new();
+        let mut to_update: BinaryHeap<Point> = BinaryHeap::new();
         while let Some(point) = self.to_update.pop() {
             if let Some(below) = point + Point(0, 1)
                 && self.is_air(&below)
             {
                 self.move_particle(&point, &below);
-                next_updates.push(below);
+                to_update.push(below);
                 continue;
             }
 
@@ -83,21 +83,21 @@ impl GameContext {
                 let moveleft = fastrand::bool();
                 if moveleft {
                     self.move_particle(&point, &down_left);
-                    next_updates.push(down_left);
+                    to_update.push(down_left);
                 } else {
                     self.move_particle(&point, &down_right);
-                    next_updates.push(down_right);
+                    to_update.push(down_right);
                 }
             } else if let Some(down_left) = down_left {
                 self.move_particle(&point, &down_left);
-                next_updates.push(down_left);
+                to_update.push(down_left);
             } else if let Some(down_right) = down_right {
                 self.move_particle(&point, &down_right);
-                next_updates.push(down_right);
+                to_update.push(down_right);
             }
         }
 
-        self.to_update = next_updates;
+        self.to_update = to_update;
     }
 
     fn move_particle(&mut self, orig_point: &Point, new_point: &Point) {
