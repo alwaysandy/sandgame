@@ -9,14 +9,37 @@ pub enum ParticleType {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+enum ParticlePhysics {
+    None,
+    Falling
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Particle {
     pub particle_type: ParticleType,
+    particle_physics: ParticlePhysics
 }
 
 impl Default for Particle {
     fn default() -> Self {
         Particle {
             particle_type: ParticleType::Air,
+            particle_physics: ParticlePhysics::None,
+        }
+    }
+}
+
+impl Particle {
+    pub fn air() -> Self {
+        Self {
+            particle_type: ParticleType::Air,
+            particle_physics: ParticlePhysics::None,
+        }
+    }
+    pub fn sand() -> Self {
+        Self {
+            particle_type: ParticleType::Sand,
+            particle_physics: ParticlePhysics::Falling
         }
     }
 }
@@ -25,7 +48,7 @@ pub struct GameContext {
     to_update: BinaryHeap<Point>,
     to_update_set: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
-    pub placing_particle: ParticleType,
+    pub placing_particle: Particle,
 }
 
 impl Default for GameContext {
@@ -33,8 +56,8 @@ impl Default for GameContext {
         GameContext {
             to_update: BinaryHeap::new(),
             to_update_set: HashSet::new(),
-            grid: [[Particle::default(); GRID_X_SIZE]; GRID_Y_SIZE],
-            placing_particle: ParticleType::Sand,
+            grid: [[Particle::air(); GRID_X_SIZE]; GRID_Y_SIZE],
+            placing_particle: Particle::sand(),
         }
     }
 }
@@ -45,7 +68,7 @@ impl GameContext {
     }
 
     pub fn add_particle(&mut self, point: Point) -> bool {
-        match self.placing_particle {
+        match self.placing_particle.particle_type {
             ParticleType::Sand => self.add_sand_particle(point),
             ParticleType::Air => self.add_air_particle(point),
         }
@@ -67,7 +90,7 @@ impl GameContext {
         match self.grid[point.1 as usize][point.0 as usize].particle_type {
             ParticleType::Air => (),
             ParticleType::Sand => {
-                self.grid[point.1 as usize][point.0 as usize].particle_type = ParticleType::Air;
+                self.grid[point.1 as usize][point.0 as usize] = Particle::air();
                 self.to_update_set.remove(&point);
                 self.propogate_updates(&point);
             }
@@ -133,8 +156,9 @@ impl GameContext {
     }
 
     fn move_particle(&mut self, orig_point: &Point, new_point: &Point) {
-        self.grid[orig_point.1 as usize][orig_point.0 as usize].particle_type = ParticleType::Air;
-        self.grid[new_point.1 as usize][new_point.0 as usize].particle_type = ParticleType::Sand;
+        let particle = self.grid[orig_point.1 as usize][orig_point.0 as usize];
+        self.grid[orig_point.1 as usize][orig_point.0 as usize] = Particle::air();
+        self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
     }
 
     fn add_sand_updates(
@@ -152,7 +176,7 @@ impl GameContext {
     fn propogate_updates(&mut self, point: &Point) {
         for d in -1..2 {
             if let Some(p) = *point + Point(d, -1)
-                && self.grid[p.1 as usize][p.0 as usize].particle_type == ParticleType::Sand
+                && self.grid[p.1 as usize][p.0 as usize].particle_physics == ParticlePhysics::Falling
             {
                 if self.to_update_set.contains(&p) {
                     continue;
