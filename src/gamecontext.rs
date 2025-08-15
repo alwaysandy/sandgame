@@ -7,7 +7,8 @@ pub struct GameContext {
     to_update_set: HashSet<Point>,
     next_update: BinaryHeap<Point>,
     next_update_set: HashSet<Point>,
-    water_particles: HashSet<Point>,
+    water_particles: BinaryHeap<Point>,
+    water_particles_set: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
     pub placing_particle: Particle,
 }
@@ -19,7 +20,8 @@ impl Default for GameContext {
             to_update_set: HashSet::new(),
             next_update: BinaryHeap::new(),
             next_update_set: HashSet::new(),
-            water_particles: HashSet::new(),
+            water_particles: BinaryHeap::new(),
+            water_particles_set: HashSet::new(),
             grid: [[Particle::air(); GRID_X_SIZE]; GRID_Y_SIZE],
             placing_particle: Particle::sand(),
         }
@@ -48,7 +50,11 @@ impl GameContext {
         match self.placing_particle.particle_type {
             ParticleType::Wall => self.grid[point.1 as usize][point.0 as usize] = Particle::wall(),
             ParticleType::Sand => self.grid[point.1 as usize][point.0 as usize] = Particle::sand(),
-            ParticleType::Water => self.grid[point.1 as usize][point.0 as usize] = Particle::water(),
+            ParticleType::Water => {
+                self.grid[point.1 as usize][point.0 as usize] = Particle::water();
+                self.water_particles.push(point);
+                self.water_particles_set.insert(point);
+            },
             ParticleType::Concrete => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::concrete();
                 return true;
@@ -76,6 +82,11 @@ impl GameContext {
     }
 
     pub fn next_tick(&mut self) {
+        self.update_sand_physics_particles();
+        self.update_water_physics_particles();
+    }
+
+    fn update_sand_physics_particles(&mut self) {
         self.to_update = self.next_update.clone();
         self.to_update_set = self.next_update_set.clone();
         self.next_update.clear();
@@ -144,6 +155,69 @@ impl GameContext {
         }
     }
 
+    fn update_water_physics_particles(&mut self) {
+        let mut water_particles: BinaryHeap<Point> = BinaryHeap::new();
+        let mut water_particles_set: HashSet<Point> = HashSet::new();
+        while let Some(point) = self.water_particles.pop() {
+            if !self.water_particles_set.contains(&point) {
+                println!("This shouldn't be hit;");
+                continue;
+            }
+
+            if let Some(below) = point + Point(0, 1)
+                && self.is_air(&below)
+            {
+                self.swap_particle(&point, &below);
+                self.update_water(&point, &below, &mut water_particles, &mut water_particles_set);
+                continue;
+            }
+
+            let down_left = if let Some(down_left) = point + Point(-1, 1)
+                && self.is_air(&down_left)
+                && let Some(left) = point + Point(-1, 0)
+                && self.is_air(&left)
+            {
+                Some(down_left)
+            } else {
+                None
+            };
+
+            let down_right = if let Some(down_right) = point + Point(1, 1)
+                && self.is_air(&down_right)
+                && let Some(right) = point + Point(1, 0)
+                && self.is_air(&right)
+            {
+                Some(down_right)
+            } else {
+                None
+            };
+
+            if let Some(down_left) = down_left
+                && let Some(down_right) = down_right
+            {
+                let move_left = fastrand::bool();
+                if move_left {
+                    self.swap_particle(&point, &down_left);
+                    self.update_water(&point, &down_left, &mut water_particles, &mut water_particles_set);
+                } else {
+                    self.swap_particle(&point, &down_right);
+                    self.update_water(&point, &down_right, &mut water_particles, &mut water_particles_set);
+                }
+            } else if let Some(down_left) = down_left {
+                self.swap_particle(&point, &down_left);
+                self.update_water(&point, &down_left, &mut water_particles, &mut water_particles_set);
+            } else if let Some(down_right) = down_right {
+                self.swap_particle(&point, &down_right);
+                self.update_water(&point, &down_right, &mut water_particles, &mut water_particles_set);
+            }
+        }
+
+        println!("{:?}", self.water_particles_set);
+        println!("{:?}", water_particles_set);
+        self.water_particles = water_particles;
+        self.water_particles_set = water_particles_set;
+    }
+
     fn swap_particle(&mut self, orig_point: &Point, new_point: &Point) {
         let particle = self.grid[orig_point.1 as usize][orig_point.0 as usize];
         match self.grid[new_point.1 as usize][new_point.0 as usize].particle_type {
@@ -152,8 +226,9 @@ impl GameContext {
                 self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
             },
             ParticleType::Water => {
-                self.water_particles.insert(*orig_point);
-                self.water_particles.remove(new_point);
+                self.water_particles_set.remove(new_point);
+                self.water_particles.push(*orig_point);
+                self.water_particles_set.insert(*orig_point);
                 self.grid[orig_point.1 as usize][orig_point.0 as usize] = Particle::water();
                 self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
             },
@@ -165,6 +240,13 @@ impl GameContext {
     fn add_updates(&mut self, origin: &Point, new_point: &Point) {
         self.next_update.push(*new_point);
         self.next_update_set.insert(*new_point);
+        self.propogate_updates(origin);
+    }
+
+    fn update_water(&mut self, origin: &Point, new_point: &Point, water_particles: &mut BinaryHeap<Point>, water_particles_set: &mut HashSet<Point>) {
+        water_particles.push(*new_point);
+        water_particles_set.insert(*new_point);
+        water_particles_set.remove(origin);
         self.propogate_updates(origin);
     }
 
