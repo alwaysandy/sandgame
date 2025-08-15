@@ -9,12 +9,13 @@ use crate::{gamecontext::*, particle::*, point::*, renderer::*};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::pixels::PixelFormatEnum;
 
 use std::time::Duration;
 
 const GRID_X_SIZE: usize = 75;
 const GRID_Y_SIZE: usize = 75;
-const DOT_SIZE_IN_PXS: usize = 5;
+const DOT_SIZE_IN_PXS: usize = 10;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -30,7 +31,16 @@ fn main() -> Result<(), String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let mut renderer = Renderer::new(window)?;
+    let canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
+    let texture_creator = canvas.texture_creator();
+    let texture = texture_creator
+        .create_texture_streaming(
+            PixelFormatEnum::ARGB8888,
+            GRID_X_SIZE as u32,
+            GRID_Y_SIZE as u32,
+        )
+        .map_err(|e| e.to_string())?;
+    let mut renderer = Renderer { canvas, texture };
     let mut event_pump = sdl_context.event_pump()?;
     let mut frame_counter = 0;
     let mut context = GameContext::new();

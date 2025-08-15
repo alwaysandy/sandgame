@@ -1,7 +1,7 @@
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum ParticleType {
-    Sand,
     Air,
+    Sand,
     Wall,
     Concrete,
 }
