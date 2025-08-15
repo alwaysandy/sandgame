@@ -1,4 +1,5 @@
-use crate::gamecontext::*;
+use crate::{DOT_SIZE_IN_PXS, GRID_X_SIZE, GRID_Y_SIZE, gamecontext::*};
+use sdl2::rect::Rect;
 use sdl2::render::{Texture, WindowCanvas};
 
 const PARTICLE_COLORS: [[u8; 3]; 4] = [
@@ -16,7 +17,13 @@ pub struct Renderer<'t> {
 impl<'t> Renderer<'t> {
     pub fn draw(&mut self, context: &GameContext) -> Result<(), String> {
         self.draw_particles(context)?;
-        self.canvas.copy(&self.texture, None, None)?;
+        let dst_rect = Rect::new(
+            0,
+            0,
+            (GRID_X_SIZE * DOT_SIZE_IN_PXS) as u32,
+            (GRID_Y_SIZE * DOT_SIZE_IN_PXS) as u32,
+        );
+        self.canvas.copy(&self.texture, dst_rect, None)?;
         self.canvas.present();
         Ok(())
     }
