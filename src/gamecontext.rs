@@ -101,6 +101,8 @@ impl GameContext {
 
             let down_left = if let Some(down_left) = point + Point(-1, 1)
                 && self.is_air(&down_left)
+                && let Some(left) = point + Point(-1, 0)
+                && self.is_air(&left)
             {
                 Some(down_left)
             } else {
@@ -109,6 +111,8 @@ impl GameContext {
 
             let down_right = if let Some(down_right) = point + Point(1, 1)
                 && self.is_air(&down_right)
+                && let Some(right) = point + Point(1, 0)
+                && self.is_air(&right)
             {
                 Some(down_right)
             } else {
