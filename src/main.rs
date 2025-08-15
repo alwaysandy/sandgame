@@ -70,6 +70,10 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::W),
                     ..
                 } => context.placing_particle = Particle::wall(),
+                Event::KeyDown {
+                    keycode: Some(Keycode::F),
+                    ..
+                } => context.placing_particle = Particle::water(),
                 Event::MouseButtonDown { .. } => mouse_down = true,
                 Event::MouseButtonUp { .. } => mouse_down = false,
                 _ => {}

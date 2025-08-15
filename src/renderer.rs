@@ -2,11 +2,12 @@ use crate::{DOT_SIZE_IN_PXS, GRID_X_SIZE, GRID_Y_SIZE, gamecontext::*};
 use sdl2::rect::Rect;
 use sdl2::render::{Texture, WindowCanvas};
 
-const PARTICLE_COLORS: [[u8; 3]; 4] = [
+const PARTICLE_COLORS: [[u8; 3]; 5] = [
     [199, 229, 252], // Air
     [237, 207, 168], // Sand
     [200, 200, 200], // Wall
     [100, 100, 100], // Concrete
+    [0, 0, 200] // Water
 ];
 
 pub struct Renderer<'t> {

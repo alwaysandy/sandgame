@@ -4,6 +4,7 @@ pub enum ParticleType {
     Sand,
     Wall,
     Concrete,
+    Water,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -11,6 +12,7 @@ pub enum ParticlePhysics {
     None,
     Sand,
     Wall,
+    Water
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -54,6 +56,13 @@ impl Particle {
         Self {
             particle_type: ParticleType::Concrete,
             particle_physics: ParticlePhysics::None,
+        }
+    }
+
+    pub fn water() -> Self {
+        Self {
+            particle_type: ParticleType::Water,
+            particle_physics: ParticlePhysics::Water
         }
     }
 }
