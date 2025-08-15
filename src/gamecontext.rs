@@ -5,6 +5,8 @@ use std::collections::{BinaryHeap, HashSet};
 pub struct GameContext {
     to_update: BinaryHeap<Point>,
     to_update_set: HashSet<Point>,
+    next_update: BinaryHeap<Point>,
+    next_update_set: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
     pub placing_particle: Particle,
 }
@@ -14,6 +16,8 @@ impl Default for GameContext {
         GameContext {
             to_update: BinaryHeap::new(),
             to_update_set: HashSet::new(),
+            next_update: BinaryHeap::new(),
+            next_update_set: HashSet::new(),
             grid: [[Particle::air(); GRID_X_SIZE]; GRID_Y_SIZE],
             placing_particle: Particle::sand(),
         }
@@ -49,18 +53,17 @@ impl GameContext {
             ParticleType::Air => (),
         }
 
-        self.to_update.push(point);
-        self.to_update_set.insert(point);
+        self.next_update.push(point);
+        self.next_update_set.insert(point);
         true
     }
 
-    // TODO improve deletion animation
     fn delete_particle(&mut self, point: Point) -> bool {
         match self.grid[point.1 as usize][point.0 as usize].particle_type {
             ParticleType::Air => (),
             ParticleType::Sand | ParticleType::Wall | ParticleType::Concrete => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::air();
-                self.to_update_set.remove(&point);
+                self.next_update_set.remove(&point);
                 self.propogate_updates(&point);
             }
         }
@@ -69,8 +72,10 @@ impl GameContext {
     }
 
     pub fn next_tick(&mut self) {
-        let mut to_update: BinaryHeap<Point> = BinaryHeap::new();
-        let mut to_update_set: HashSet<Point> = HashSet::new();
+        self.to_update = self.next_update.clone();
+        self.to_update_set = self.next_update_set.clone();
+        self.next_update.clear();
+        self.next_update_set.clear();
         while let Some(point) = self.to_update.pop() {
             if !self.to_update_set.contains(&point) {
                 continue;
@@ -85,7 +90,7 @@ impl GameContext {
                 && self.is_air(&below)
             {
                 self.move_particle(&point, &below);
-                self.add_updates(&point, &below, &mut to_update, &mut to_update_set);
+                self.add_updates(&point, &below);
                 continue;
             }
 
@@ -116,22 +121,19 @@ impl GameContext {
                 let move_left = fastrand::bool();
                 if move_left {
                     self.move_particle(&point, &down_left);
-                    self.add_updates(&point, &down_left, &mut to_update, &mut to_update_set);
+                    self.add_updates(&point, &down_left);
                 } else {
                     self.move_particle(&point, &down_right);
-                    self.add_updates(&point, &down_right, &mut to_update, &mut to_update_set);
+                    self.add_updates(&point, &down_right);
                 }
             } else if let Some(down_left) = down_left {
                 self.move_particle(&point, &down_left);
-                self.add_updates(&point, &down_left, &mut to_update, &mut to_update_set);
+                self.add_updates(&point, &down_left);
             } else if let Some(down_right) = down_right {
                 self.move_particle(&point, &down_right);
-                self.add_updates(&point, &down_right, &mut to_update, &mut to_update_set);
+                self.add_updates(&point, &down_right);
             }
         }
-
-        self.to_update = to_update;
-        self.to_update_set = to_update_set;
     }
 
     fn move_particle(&mut self, orig_point: &Point, new_point: &Point) {
@@ -140,22 +142,16 @@ impl GameContext {
         self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
     }
 
-    fn add_updates(
-        &mut self,
-        origin: &Point,
-        new_point: &Point,
-        to_update: &mut BinaryHeap<Point>,
-        to_update_set: &mut HashSet<Point>,
-    ) {
-        to_update.push(*new_point);
-        to_update_set.insert(*new_point);
+    fn add_updates(&mut self, origin: &Point, new_point: &Point) {
+        self.next_update.push(*new_point);
+        self.next_update_set.insert(*new_point);
         self.propogate_updates(origin);
     }
 
     fn propogate_updates(&mut self, point: &Point) {
         for d in -1..2 {
             if let Some(p) = *point + Point(d, -1) {
-                if self.to_update_set.contains(&p) {
+                if self.next_update_set.contains(&p) {
                     continue;
                 }
 
@@ -164,8 +160,8 @@ impl GameContext {
                     ParticlePhysics::None => continue,
                 }
 
-                self.to_update.push(p);
-                self.to_update_set.insert(p);
+                self.next_update.push(p);
+                self.next_update_set.insert(p);
             }
         }
     }
