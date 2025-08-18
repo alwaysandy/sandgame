@@ -146,8 +146,8 @@ impl GameContext {
     }
 
     fn update_water_physics_particles(&mut self) {
-        let mut water_particles: BinaryHeap<Point> = BinaryHeap::new();
-        let mut water_particles_set: HashSet<Point> = HashSet::new();
+        let mut next_water_particles = BinaryHeap::new();
+        let mut next_water_particles_set = HashSet::new();
         while let Some(point) = self.water_particles.pop() {
             if !self.water_particles_set.contains(&point) {
                 continue;
@@ -160,8 +160,8 @@ impl GameContext {
                 self.update_water(
                     &point,
                     &below,
-                    &mut water_particles,
-                    &mut water_particles_set,
+                    &mut next_water_particles,
+                    &mut next_water_particles_set,
                 );
                 continue;
             }
@@ -188,18 +188,35 @@ impl GameContext {
                 self.update_water(
                     &point,
                     &choice,
-                    &mut water_particles,
-                    &mut water_particles_set,
+                    &mut next_water_particles,
+                    &mut next_water_particles_set
                 );
                 continue;
             }
 
-            water_particles.push(point);
-            water_particles_set.insert(point);
+            if self.get_water_pressure(&point) >= 1 {
+                let mut choices: Vec<Point> = Vec::new();
+                if let Some(left) = self.get_next_free_space(&point, Point(-1, 0), &next_water_particles_set) {
+                    choices.push(left);
+                }
+
+                if let Some(right) = self.get_next_free_space(&point, Point(1, 0), &next_water_particles_set) {
+                    choices.push(right);
+                }
+
+                if let Some(new_point) = fastrand::choice(choices) {
+                    self.swap_particle(&point, &new_point);
+                    self.update_water(&point, &new_point, &mut next_water_particles, &mut next_water_particles_set);
+                    continue;
+                }
+            }
+
+            next_water_particles.push(point);
+            next_water_particles_set.insert(point);
         }
 
-        self.water_particles = water_particles;
-        self.water_particles_set = water_particles_set;
+        self.water_particles = next_water_particles.drain().collect();
+        self.water_particles_set = next_water_particles_set.drain().collect();
     }
 
     fn get_water_pressure(&self, point: &Point) -> usize {
@@ -215,10 +232,10 @@ impl GameContext {
         pressure
     }
 
-    fn get_next_free_space(&self, point: &Point, direction: Point) -> Option<Point> {
+    fn get_next_free_space(&self, point: &Point, direction: Point, next_water_particles_set: &HashSet<Point>) -> Option<Point> {
         let mut current_point = point.clone();
         while let Some(next_point) = current_point + direction {
-            if self.water_particles_set.contains(&next_point) {
+            if self.water_particles_set.contains(&next_point) || next_water_particles_set.contains(&next_point) {
                 current_point = (current_point + direction).unwrap();
                 continue;
             }
@@ -226,7 +243,7 @@ impl GameContext {
             return match self.grid[next_point.1 as usize][next_point.0 as usize].particle_type {
                 ParticleType::Air => Some(next_point),
                 _ => None,
-            }
+            };
         }
 
         None
@@ -260,12 +277,12 @@ impl GameContext {
         &mut self,
         origin: &Point,
         new_point: &Point,
-        water_particles: &mut BinaryHeap<Point>,
-        water_particles_set: &mut HashSet<Point>,
+        next_water_particles: &mut BinaryHeap<Point>,
+        next_water_particles_set: &mut HashSet<Point>
     ) {
-        water_particles.push(*new_point);
-        water_particles_set.insert(*new_point);
-        water_particles_set.remove(origin);
+        next_water_particles.push(*new_point);
+        next_water_particles_set.insert(*new_point);
+        next_water_particles_set.remove(origin);
         self.propogate_updates(origin);
     }
 
