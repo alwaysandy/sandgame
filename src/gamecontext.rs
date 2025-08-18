@@ -200,6 +200,36 @@ impl GameContext {
         self.water_particles_set = water_particles_set;
     }
 
+    fn get_water_pressure(&self, point: &Point) -> usize {
+        let mut pressure = 0;
+        let mut current_point = point.clone();
+        while let Some(next_point) = current_point + Point(0, -1)
+            && self.water_particles_set.contains(&next_point)
+        {
+            pressure += 1;
+            current_point.1 -= 1;
+        }
+
+        pressure
+    }
+
+    fn get_next_free_space(&self, point: &Point, direction: Point) -> Option<Point> {
+        let mut current_point = point.clone();
+        while let Some(next_point) = current_point + direction {
+            if self.water_particles_set.contains(&next_point) {
+                current_point = (current_point + direction).unwrap();
+                continue;
+            }
+
+            return match self.grid[next_point.1 as usize][next_point.0 as usize].particle_type {
+                ParticleType::Air => Some(next_point),
+                _ => None,
+            }
+        }
+
+        None
+    }
+
     fn swap_particle(&mut self, orig_point: &Point, new_point: &Point) {
         let particle = self.grid[orig_point.1 as usize][orig_point.0 as usize];
         match self.grid[new_point.1 as usize][new_point.0 as usize].particle_type {
