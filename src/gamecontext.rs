@@ -11,6 +11,7 @@ pub struct GameContext {
     water_particles_set: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
     pub placing_particle: Particle,
+    pub running: bool,
 }
 
 impl Default for GameContext {
@@ -24,6 +25,7 @@ impl Default for GameContext {
             water_particles_set: HashSet::new(),
             grid: [[Particle::air(); GRID_X_SIZE]; GRID_Y_SIZE],
             placing_particle: Particle::sand(),
+            running: true,
         }
     }
 }

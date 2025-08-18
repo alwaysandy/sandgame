@@ -74,6 +74,10 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::F),
                     ..
                 } => context.placing_particle = Particle::water(),
+                Event::KeyDown {
+                    keycode: Some(Keycode::P),
+                    ..
+                } => context.running = !context.running,
                 Event::MouseButtonDown { .. } => mouse_down = true,
                 Event::MouseButtonUp { .. } => mouse_down = false,
                 _ => {}
@@ -99,7 +103,9 @@ fn main() -> Result<(), String> {
                 frame_counter = 0;
             }
 
-            context.next_tick();
+            if context.running {
+                context.next_tick();
+            }
         }
 
         renderer.draw(&context)?;
