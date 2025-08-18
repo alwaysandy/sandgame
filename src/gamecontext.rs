@@ -35,9 +35,10 @@ impl GameContext {
 
     pub fn add_particle(&mut self, point: Point) -> bool {
         match self.placing_particle.particle_type {
-            ParticleType::Sand | ParticleType::Wall | ParticleType::Concrete | ParticleType::Water => {
-                self.place_particle(point)
-            }
+            ParticleType::Sand
+            | ParticleType::Wall
+            | ParticleType::Concrete
+            | ParticleType::Water => self.place_particle(point),
             ParticleType::Air => self.delete_particle(point),
         }
     }
@@ -54,7 +55,7 @@ impl GameContext {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::water();
                 self.water_particles.push(point);
                 self.water_particles_set.insert(point);
-            },
+            }
             ParticleType::Concrete => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::concrete();
                 return true;
@@ -114,43 +115,27 @@ impl GameContext {
                 _ => continue,
             }
 
-            let down_left = if let Some(down_left) = point + Point(-1, 1)
+            let mut choices: Vec<Point> = Vec::new();
+            if let Some(down_left) = point + Point(-1, 1)
                 && self.can_fill(&down_left)
                 && let Some(left) = point + Point(-1, 0)
                 && self.can_fill(&left)
             {
-                Some(down_left)
-            } else {
-                None
-            };
+                choices.push(down_left);
+            }
 
-            let down_right = if let Some(down_right) = point + Point(1, 1)
+            if let Some(down_right) = point + Point(1, 1)
                 && self.can_fill(&down_right)
                 && let Some(right) = point + Point(1, 0)
                 && self.can_fill(&right)
             {
-                Some(down_right)
-            } else {
-                None
-            };
+                choices.push(down_right);
+            }
 
-            if let Some(down_left) = down_left
-                && let Some(down_right) = down_right
-            {
-                let move_left = fastrand::bool();
-                if move_left {
-                    self.swap_particle(&point, &down_left);
-                    self.add_updates(&point, &down_left);
-                } else {
-                    self.swap_particle(&point, &down_right);
-                    self.add_updates(&point, &down_right);
-                }
-            } else if let Some(down_left) = down_left {
-                self.swap_particle(&point, &down_left);
-                self.add_updates(&point, &down_left);
-            } else if let Some(down_right) = down_right {
-                self.swap_particle(&point, &down_right);
-                self.add_updates(&point, &down_right);
+            if let Some(choice) = fastrand::choice(choices) {
+                self.swap_particle(&point, &choice);
+                self.add_updates(&point, &choice);
+                continue;
             }
         }
     }
@@ -160,7 +145,6 @@ impl GameContext {
         let mut water_particles_set: HashSet<Point> = HashSet::new();
         while let Some(point) = self.water_particles.pop() {
             if !self.water_particles_set.contains(&point) {
-                println!("This shouldn't be hit;");
                 continue;
             }
 
@@ -168,52 +152,47 @@ impl GameContext {
                 && self.is_air(&below)
             {
                 self.swap_particle(&point, &below);
-                self.update_water(&point, &below, &mut water_particles, &mut water_particles_set);
+                self.update_water(
+                    &point,
+                    &below,
+                    &mut water_particles,
+                    &mut water_particles_set,
+                );
                 continue;
             }
 
-            let down_left = if let Some(down_left) = point + Point(-1, 1)
+            let mut choices: Vec<Point> = Vec::new();
+            if let Some(down_left) = point + Point(-1, 1)
                 && self.is_air(&down_left)
                 && let Some(left) = point + Point(-1, 0)
                 && self.is_air(&left)
             {
-                Some(down_left)
-            } else {
-                None
-            };
+                choices.push(down_left);
+            }
 
-            let down_right = if let Some(down_right) = point + Point(1, 1)
+            if let Some(down_right) = point + Point(1, 1)
                 && self.is_air(&down_right)
                 && let Some(right) = point + Point(1, 0)
                 && self.is_air(&right)
             {
-                Some(down_right)
-            } else {
-                None
-            };
-
-            if let Some(down_left) = down_left
-                && let Some(down_right) = down_right
-            {
-                let move_left = fastrand::bool();
-                if move_left {
-                    self.swap_particle(&point, &down_left);
-                    self.update_water(&point, &down_left, &mut water_particles, &mut water_particles_set);
-                } else {
-                    self.swap_particle(&point, &down_right);
-                    self.update_water(&point, &down_right, &mut water_particles, &mut water_particles_set);
-                }
-            } else if let Some(down_left) = down_left {
-                self.swap_particle(&point, &down_left);
-                self.update_water(&point, &down_left, &mut water_particles, &mut water_particles_set);
-            } else if let Some(down_right) = down_right {
-                self.swap_particle(&point, &down_right);
-                self.update_water(&point, &down_right, &mut water_particles, &mut water_particles_set);
+                choices.push(down_right);
             }
+
+            if let Some(choice) = fastrand::choice(choices) {
+                self.swap_particle(&point, &choice);
+                self.update_water(
+                    &point,
+                    &choice,
+                    &mut water_particles,
+                    &mut water_particles_set,
+                );
+                continue;
+            }
+
+            water_particles.push(point);
+            water_particles_set.insert(point);
         }
 
-        println!("{:?}", self.water_particles_set);
-        println!("{:?}", water_particles_set);
         self.water_particles = water_particles;
         self.water_particles_set = water_particles_set;
     }
@@ -224,17 +203,16 @@ impl GameContext {
             ParticleType::Air => {
                 self.grid[orig_point.1 as usize][orig_point.0 as usize] = Particle::air();
                 self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
-            },
+            }
             ParticleType::Water => {
                 self.water_particles_set.remove(new_point);
                 self.water_particles.push(*orig_point);
                 self.water_particles_set.insert(*orig_point);
                 self.grid[orig_point.1 as usize][orig_point.0 as usize] = Particle::water();
                 self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
-            },
-            _ => unreachable!()
+            }
+            _ => unreachable!(),
         }
-
     }
 
     fn add_updates(&mut self, origin: &Point, new_point: &Point) {
@@ -243,7 +221,13 @@ impl GameContext {
         self.propogate_updates(origin);
     }
 
-    fn update_water(&mut self, origin: &Point, new_point: &Point, water_particles: &mut BinaryHeap<Point>, water_particles_set: &mut HashSet<Point>) {
+    fn update_water(
+        &mut self,
+        origin: &Point,
+        new_point: &Point,
+        water_particles: &mut BinaryHeap<Point>,
+        water_particles_set: &mut HashSet<Point>,
+    ) {
         water_particles.push(*new_point);
         water_particles_set.insert(*new_point);
         water_particles_set.remove(origin);

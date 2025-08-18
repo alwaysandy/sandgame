@@ -12,7 +12,7 @@ pub enum ParticlePhysics {
     None,
     Sand,
     Wall,
-    Water
+    Water,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -62,7 +62,7 @@ impl Particle {
     pub fn water() -> Self {
         Self {
             particle_type: ParticleType::Water,
-            particle_physics: ParticlePhysics::Water
+            particle_physics: ParticlePhysics::Water,
         }
     }
 }

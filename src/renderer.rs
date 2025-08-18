@@ -7,7 +7,7 @@ const PARTICLE_COLORS: [[u8; 3]; 5] = [
     [237, 207, 168], // Sand
     [200, 200, 200], // Wall
     [100, 100, 100], // Concrete
-    [0, 0, 200] // Water
+    [0, 0, 200],     // Water
 ];
 
 pub struct Renderer<'t> {
