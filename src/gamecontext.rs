@@ -189,24 +189,33 @@ impl GameContext {
                     &point,
                     &choice,
                     &mut next_water_particles,
-                    &mut next_water_particles_set
+                    &mut next_water_particles_set,
                 );
                 continue;
             }
 
             if self.get_water_pressure(&point) >= 1 {
                 let mut choices: Vec<Point> = Vec::new();
-                if let Some(left) = self.get_next_free_space(&point, Point(-1, 0), &next_water_particles_set) {
+                if let Some(left) =
+                    self.get_next_free_space(&point, Point(-1, 0), &next_water_particles_set)
+                {
                     choices.push(left);
                 }
 
-                if let Some(right) = self.get_next_free_space(&point, Point(1, 0), &next_water_particles_set) {
+                if let Some(right) =
+                    self.get_next_free_space(&point, Point(1, 0), &next_water_particles_set)
+                {
                     choices.push(right);
                 }
 
                 if let Some(new_point) = fastrand::choice(choices) {
                     self.swap_particle(&point, &new_point);
-                    self.update_water(&point, &new_point, &mut next_water_particles, &mut next_water_particles_set);
+                    self.update_water(
+                        &point,
+                        &new_point,
+                        &mut next_water_particles,
+                        &mut next_water_particles_set,
+                    );
                     continue;
                 }
             }
@@ -232,10 +241,17 @@ impl GameContext {
         pressure
     }
 
-    fn get_next_free_space(&self, point: &Point, direction: Point, next_water_particles_set: &HashSet<Point>) -> Option<Point> {
-        let mut current_point = point.clone();
+    fn get_next_free_space(
+        &self,
+        point: &Point,
+        direction: Point,
+        next_water_particles_set: &HashSet<Point>,
+    ) -> Option<Point> {
+        let mut current_point = *point;
         while let Some(next_point) = current_point + direction {
-            if self.water_particles_set.contains(&next_point) || next_water_particles_set.contains(&next_point) {
+            if self.water_particles_set.contains(&next_point)
+                || next_water_particles_set.contains(&next_point)
+            {
                 current_point = (current_point + direction).unwrap();
                 continue;
             }
@@ -278,7 +294,7 @@ impl GameContext {
         origin: &Point,
         new_point: &Point,
         next_water_particles: &mut BinaryHeap<Point>,
-        next_water_particles_set: &mut HashSet<Point>
+        next_water_particles_set: &mut HashSet<Point>,
     ) {
         next_water_particles.push(*new_point);
         next_water_particles_set.insert(*new_point);
