@@ -132,6 +132,7 @@ impl GameContext {
                 choices.push(down_right);
             }
 
+            // Randomly choose between going downleft or downright
             if let Some(choice) = fastrand::choice(choices) {
                 self.swap_particle(&point, &choice);
                 self.add_updates(&point, &choice);
