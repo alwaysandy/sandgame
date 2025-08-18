@@ -71,12 +71,14 @@ impl GameContext {
     fn delete_particle(&mut self, point: Point) -> bool {
         match self.grid[point.1 as usize][point.0 as usize].particle_type {
             ParticleType::Air => (),
-            ParticleType::Sand | ParticleType::Wall | ParticleType::Concrete => {
+            ParticleType::Sand
+            | ParticleType::Wall
+            | ParticleType::Concrete
+            | ParticleType::Water => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::air();
                 self.next_update_set.remove(&point);
                 self.propogate_updates(&point);
             }
-            ParticleType::Water => unimplemented!(),
         }
 
         true

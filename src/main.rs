@@ -81,8 +81,8 @@ fn main() -> Result<(), String> {
         }
 
         frame_counter += 1;
-        if frame_counter % 5 == 0 {
-            if frame_counter % 15 == 0 {
+        if frame_counter % 3 == 0 {
+            if frame_counter % 9 == 0 {
                 if mouse_down {
                     let x = event_pump.mouse_state().x();
                     let y = event_pump.mouse_state().y();
