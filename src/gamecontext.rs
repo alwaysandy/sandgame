@@ -7,8 +7,6 @@ pub struct GameContext {
     to_update_set: HashSet<Point>,
     next_update: BinaryHeap<Point>,
     next_update_set: HashSet<Point>,
-    water_particles: BinaryHeap<Point>,
-    water_particles_set: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
     pub placing_particle: Particle,
     pub running: bool,
@@ -21,8 +19,6 @@ impl Default for GameContext {
             to_update_set: HashSet::new(),
             next_update: BinaryHeap::new(),
             next_update_set: HashSet::new(),
-            water_particles: BinaryHeap::new(),
-            water_particles_set: HashSet::new(),
             grid: [[Particle::air(); GRID_X_SIZE]; GRID_Y_SIZE],
             placing_particle: Particle::sand(),
             running: true,
@@ -54,9 +50,7 @@ impl GameContext {
             ParticleType::Wall => self.grid[point.1 as usize][point.0 as usize] = Particle::wall(),
             ParticleType::Sand => self.grid[point.1 as usize][point.0 as usize] = Particle::sand(),
             ParticleType::Water => {
-                self.grid[point.1 as usize][point.0 as usize] = Particle::water();
-                self.water_particles.push(point);
-                self.water_particles_set.insert(point);
+                self.grid[point.1 as usize][point.0 as usize] = Particle::water()
             }
             ParticleType::Concrete => {
                 self.grid[point.1 as usize][point.0 as usize] = Particle::concrete();
@@ -88,7 +82,7 @@ impl GameContext {
 
     pub fn next_tick(&mut self) {
         self.update_sand_physics_particles();
-        self.update_water_physics_particles();
+        // self.update_water_physics_particles();
     }
 
     fn update_sand_physics_particles(&mut self) {
@@ -96,44 +90,76 @@ impl GameContext {
         self.to_update_set = self.next_update_set.clone();
         self.next_update.clear();
         self.next_update_set.clear();
+
         while let Some(point) = self.to_update.pop() {
             if !self.to_update_set.contains(&point) {
                 continue;
             }
 
-            match self.grid[point.1 as usize][point.0 as usize].particle_physics {
-                ParticlePhysics::Sand | ParticlePhysics::Wall => (),
+            let particle = self.grid[point.1 as usize][point.0 as usize];
+            match particle.particle_physics {
+                ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => (),
                 _ => continue,
             }
 
-            if let Some(below) = point + Point(0, 1)
-                && self.can_fill(&below)
-            {
-                self.swap_particle(&point, &below);
-                self.add_updates(&point, &below);
-                continue;
+            if let Some(below) = point + Point(0, 1) {
+                match particle.particle_type {
+                    ParticleType::Water => {
+                        if self.is_air(&below) {
+                            self.swap_particle(&point, &below);
+                            self.add_updates(&point, &below);
+                            continue;
+                        }
+                    }
+                    ParticleType::Sand | ParticleType::Wall => {
+                        if self.can_fill(&below) {
+                            self.swap_particle(&point, &below);
+                            self.add_updates(&point, &below);
+                            continue;
+                        }
+                    }
+                    _ => unreachable!(),
+                }
             }
 
             match self.grid[point.1 as usize][point.0 as usize].particle_physics {
-                ParticlePhysics::Sand => (),
+                ParticlePhysics::Sand | ParticlePhysics::Water => (),
                 _ => continue,
             }
 
             let mut choices: Vec<Point> = Vec::new();
             if let Some(down_left) = point + Point(-1, 1)
-                && self.can_fill(&down_left)
                 && let Some(left) = point + Point(-1, 0)
-                && self.can_fill(&left)
             {
-                choices.push(down_left);
+                match particle.particle_type {
+                    ParticleType::Water => {
+                        if self.is_air(&down_left) && self.is_air(&left) {
+                            choices.push(down_left);
+                        }
+                    }
+                    _ => {
+                        if self.can_fill(&down_left) && self.can_fill(&left) {
+                            choices.push(down_left);
+                        }
+                    }
+                }
             }
 
             if let Some(down_right) = point + Point(1, 1)
-                && self.can_fill(&down_right)
                 && let Some(right) = point + Point(1, 0)
-                && self.can_fill(&right)
             {
-                choices.push(down_right);
+                match particle.particle_type {
+                    ParticleType::Water => {
+                        if self.is_air(&down_right) && self.is_air(&right) {
+                            choices.push(down_right);
+                        }
+                    }
+                    _ => {
+                        if self.can_fill(&down_right) && self.can_fill(&right) {
+                            choices.push(down_right);
+                        }
+                    }
+                }
             }
 
             // Randomly choose between going downleft or downright
@@ -142,97 +168,38 @@ impl GameContext {
                 self.add_updates(&point, &choice);
                 continue;
             }
-        }
-    }
 
-    fn update_water_physics_particles(&mut self) {
-        let mut next_water_particles = BinaryHeap::new();
-        let mut next_water_particles_set = HashSet::new();
-        while let Some(point) = self.water_particles.pop() {
-            if !self.water_particles_set.contains(&point) {
-                continue;
+            match self.grid[point.1 as usize][point.0 as usize].particle_physics {
+                ParticlePhysics::Water => (),
+                _ => continue,
             }
 
-            if let Some(below) = point + Point(0, 1)
-                && self.is_air(&below)
-            {
-                self.swap_particle(&point, &below);
-                self.update_water(
-                    &point,
-                    &below,
-                    &mut next_water_particles,
-                    &mut next_water_particles_set,
-                );
-                continue;
-            }
-
-            let mut choices: Vec<Point> = Vec::new();
-            if let Some(down_left) = point + Point(-1, 1)
-                && self.is_air(&down_left)
-                && let Some(left) = point + Point(-1, 0)
-                && self.is_air(&left)
-            {
-                choices.push(down_left);
-            }
-
-            if let Some(down_right) = point + Point(1, 1)
-                && self.is_air(&down_right)
-                && let Some(right) = point + Point(1, 0)
-                && self.is_air(&right)
-            {
-                choices.push(down_right);
-            }
-
-            if let Some(choice) = fastrand::choice(choices) {
-                self.swap_particle(&point, &choice);
-                self.update_water(
-                    &point,
-                    &choice,
-                    &mut next_water_particles,
-                    &mut next_water_particles_set,
-                );
-                continue;
-            }
-
+            println!("{}", self.get_water_pressure(&point));
             if self.get_water_pressure(&point) >= 1 {
                 let mut choices: Vec<Point> = Vec::new();
-                if let Some(left) =
-                    self.get_next_free_space(&point, Point(-1, 0), &next_water_particles_set)
-                {
+                if let Some(left) = self.get_next_free_space(&point, Point(-1, 0)) {
                     choices.push(left);
                 }
 
-                if let Some(right) =
-                    self.get_next_free_space(&point, Point(1, 0), &next_water_particles_set)
-                {
+                if let Some(right) = self.get_next_free_space(&point, Point(1, 0)) {
                     choices.push(right);
                 }
 
                 if let Some(new_point) = fastrand::choice(choices) {
                     self.swap_particle(&point, &new_point);
-                    self.update_water(
-                        &point,
-                        &new_point,
-                        &mut next_water_particles,
-                        &mut next_water_particles_set,
-                    );
+                    self.add_updates(&point, &new_point);
                     continue;
                 }
             }
-
-            next_water_particles.push(point);
-            next_water_particles_set.insert(point);
         }
-
-        self.water_particles = next_water_particles.drain().collect();
-        self.water_particles_set = next_water_particles_set.drain().collect();
     }
 
     fn get_water_pressure(&self, point: &Point) -> usize {
         let mut pressure = 0;
-        let mut current_point = point.clone();
+        let mut current_point = *point;
         while let Some(next_point) = current_point + Point(0, -1)
-            && self.water_particles_set.contains(&next_point)
+            && self.grid[next_point.1 as usize][next_point.0 as usize].particle_type
+                == ParticleType::Water
         {
             pressure += 1;
             current_point.1 -= 1;
@@ -241,16 +208,11 @@ impl GameContext {
         pressure
     }
 
-    fn get_next_free_space(
-        &self,
-        point: &Point,
-        direction: Point,
-        next_water_particles_set: &HashSet<Point>,
-    ) -> Option<Point> {
+    fn get_next_free_space(&self, point: &Point, direction: Point) -> Option<Point> {
         let mut current_point = *point;
         while let Some(next_point) = current_point + direction {
-            if self.water_particles_set.contains(&next_point)
-                || next_water_particles_set.contains(&next_point)
+            if self.grid[next_point.1 as usize][next_point.0 as usize].particle_type
+                == ParticleType::Water
             {
                 current_point = (current_point + direction).unwrap();
                 continue;
@@ -273,9 +235,6 @@ impl GameContext {
                 self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
             }
             ParticleType::Water => {
-                self.water_particles_set.remove(new_point);
-                self.water_particles.push(*orig_point);
-                self.water_particles_set.insert(*orig_point);
                 self.grid[orig_point.1 as usize][orig_point.0 as usize] = Particle::water();
                 self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
             }
@@ -289,34 +248,24 @@ impl GameContext {
         self.propogate_updates(origin);
     }
 
-    fn update_water(
-        &mut self,
-        origin: &Point,
-        new_point: &Point,
-        next_water_particles: &mut BinaryHeap<Point>,
-        next_water_particles_set: &mut HashSet<Point>,
-    ) {
-        next_water_particles.push(*new_point);
-        next_water_particles_set.insert(*new_point);
-        next_water_particles_set.remove(origin);
-        self.propogate_updates(origin);
-    }
-
     fn propogate_updates(&mut self, point: &Point) {
-        for d in -1..2 {
-            if let Some(p) = *point + Point(d, -1) {
-                if self.next_update_set.contains(&p) {
-                    continue;
-                }
+        for y in 0..=2 {
+            for x in -1..=1 {
+                if let Some(p) = *point + Point(x, y) {
+                    if self.next_update_set.contains(&p) {
+                        continue;
+                    }
 
-                match self.grid[p.1 as usize][p.0 as usize].particle_physics {
-                    ParticlePhysics::Sand | ParticlePhysics::Wall => (),
-                    ParticlePhysics::Water => continue,
-                    ParticlePhysics::None => continue,
-                }
+                    match self.grid[p.1 as usize][p.0 as usize].particle_physics {
+                        ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => {
+                            ()
+                        }
+                        ParticlePhysics::None => continue,
+                    }
 
-                self.next_update.push(p);
-                self.next_update_set.insert(p);
+                    self.next_update.push(p);
+                    self.next_update_set.insert(p);
+                }
             }
         }
     }
