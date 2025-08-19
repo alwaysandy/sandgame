@@ -81,11 +81,10 @@ impl GameContext {
     }
 
     pub fn next_tick(&mut self) {
-        self.update_sand_physics_particles();
-        // self.update_water_physics_particles();
+        self.update_physics_particles();
     }
 
-    fn update_sand_physics_particles(&mut self) {
+    fn update_physics_particles(&mut self) {
         self.to_update = self.next_update.clone();
         self.to_update_set = self.next_update_set.clone();
         self.next_update.clear();
