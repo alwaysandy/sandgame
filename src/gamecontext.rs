@@ -174,7 +174,6 @@ impl GameContext {
                 _ => continue,
             }
 
-            println!("{}", self.get_water_pressure(&point));
             if self.get_water_pressure(&point) >= 1 {
                 let mut choices: Vec<Point> = Vec::new();
                 if let Some(left) = self.get_next_free_space(&point, Point(-1, 0)) {
@@ -257,9 +256,7 @@ impl GameContext {
                     }
 
                     match self.grid[p.1 as usize][p.0 as usize].particle_physics {
-                        ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => {
-                            ()
-                        }
+                        ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => {}
                         ParticlePhysics::None => continue,
                     }
 
