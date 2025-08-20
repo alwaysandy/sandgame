@@ -251,7 +251,7 @@ impl GameContext {
                         continue;
                     }
 
-                    match self.grid[p.1 as usize][p.0 as usize].particle_physics {
+                    match self.grid[p.y()][p.x()].particle_physics {
                         ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => {}
                         ParticlePhysics::None => continue,
                     }
