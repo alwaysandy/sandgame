@@ -6,6 +6,16 @@ use std::ops::Add;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Point(pub i32, pub i32);
 
+impl Point {
+    pub fn y(&self) -> usize {
+        self.1 as usize
+    }
+
+    pub fn x(&self) -> usize {
+        self.0 as usize
+    }
+}
+
 impl Add for Point {
     type Output = Option<Self>;
 

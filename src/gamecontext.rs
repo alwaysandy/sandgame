@@ -47,13 +47,11 @@ impl GameContext {
         }
 
         match self.placing_particle.particle_type {
-            ParticleType::Wall => self.grid[point.1 as usize][point.0 as usize] = Particle::wall(),
-            ParticleType::Sand => self.grid[point.1 as usize][point.0 as usize] = Particle::sand(),
-            ParticleType::Water => {
-                self.grid[point.1 as usize][point.0 as usize] = Particle::water()
-            }
+            ParticleType::Wall => self.grid[point.y()][point.x()] = Particle::wall(),
+            ParticleType::Sand => self.grid[point.y()][point.x()] = Particle::sand(),
+            ParticleType::Water => self.grid[point.y()][point.x()] = Particle::water(),
             ParticleType::Concrete => {
-                self.grid[point.1 as usize][point.0 as usize] = Particle::concrete();
+                self.grid[point.y()][point.x()] = Particle::concrete();
                 return true;
             }
             ParticleType::Air => (),
@@ -65,13 +63,13 @@ impl GameContext {
     }
 
     fn delete_particle(&mut self, point: Point) -> bool {
-        match self.grid[point.1 as usize][point.0 as usize].particle_type {
+        match self.grid[point.y()][point.x()].particle_type {
             ParticleType::Air => (),
             ParticleType::Sand
             | ParticleType::Wall
             | ParticleType::Concrete
             | ParticleType::Water => {
-                self.grid[point.1 as usize][point.0 as usize] = Particle::air();
+                self.grid[point.y()][point.x()] = Particle::air();
                 self.next_update_set.remove(&point);
                 self.propogate_updates(&point);
             }
@@ -95,7 +93,7 @@ impl GameContext {
                 continue;
             }
 
-            let particle = self.grid[point.1 as usize][point.0 as usize];
+            let particle = self.grid[point.y()][point.x()];
             match particle.particle_physics {
                 ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => (),
                 _ => continue,
@@ -121,7 +119,7 @@ impl GameContext {
                 }
             }
 
-            match self.grid[point.1 as usize][point.0 as usize].particle_physics {
+            match self.grid[point.y()][point.x()].particle_physics {
                 ParticlePhysics::Sand | ParticlePhysics::Water => (),
                 _ => continue,
             }
@@ -168,7 +166,7 @@ impl GameContext {
                 continue;
             }
 
-            match self.grid[point.1 as usize][point.0 as usize].particle_physics {
+            match self.grid[point.y()][point.x()].particle_physics {
                 ParticlePhysics::Water => (),
                 _ => continue,
             }
@@ -198,8 +196,7 @@ impl GameContext {
         let mut pressure = 0;
         let mut current_point = *point;
         while let Some(next_point) = current_point + Point(0, -1)
-            && self.grid[next_point.1 as usize][next_point.0 as usize].particle_type
-                == ParticleType::Water
+            && self.grid[next_point.y()][next_point.x()].particle_type == ParticleType::Water
         {
             pressure += 1;
             current_point.1 -= 1;
@@ -211,14 +208,12 @@ impl GameContext {
     fn get_next_free_space(&self, point: &Point, direction: Point) -> Option<Point> {
         let mut current_point = *point;
         while let Some(next_point) = current_point + direction {
-            if self.grid[next_point.1 as usize][next_point.0 as usize].particle_type
-                == ParticleType::Water
-            {
+            if self.grid[next_point.y()][next_point.x()].particle_type == ParticleType::Water {
                 current_point = (current_point + direction).unwrap();
                 continue;
             }
 
-            return match self.grid[next_point.1 as usize][next_point.0 as usize].particle_type {
+            return match self.grid[next_point.y()][next_point.x()].particle_type {
                 ParticleType::Air => Some(next_point),
                 _ => None,
             };
@@ -228,15 +223,15 @@ impl GameContext {
     }
 
     fn swap_particle(&mut self, orig_point: &Point, new_point: &Point) {
-        let particle = self.grid[orig_point.1 as usize][orig_point.0 as usize];
-        match self.grid[new_point.1 as usize][new_point.0 as usize].particle_type {
+        let particle = self.grid[orig_point.y()][orig_point.x()];
+        match self.grid[new_point.y()][new_point.x()].particle_type {
             ParticleType::Air => {
-                self.grid[orig_point.1 as usize][orig_point.0 as usize] = Particle::air();
-                self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
+                self.grid[orig_point.y()][orig_point.x()] = Particle::air();
+                self.grid[new_point.y()][new_point.x()] = particle;
             }
             ParticleType::Water => {
-                self.grid[orig_point.1 as usize][orig_point.0 as usize] = Particle::water();
-                self.grid[new_point.1 as usize][new_point.0 as usize] = particle;
+                self.grid[orig_point.y()][orig_point.x()] = Particle::water();
+                self.grid[new_point.y()][new_point.x()] = particle;
             }
             _ => unreachable!(),
         }
@@ -269,11 +264,11 @@ impl GameContext {
     }
 
     fn is_air(&self, point: &Point) -> bool {
-        self.grid[point.1 as usize][point.0 as usize].particle_type == ParticleType::Air
+        self.grid[point.y()][point.x()].particle_type == ParticleType::Air
     }
 
     fn can_fill(&self, point: &Point) -> bool {
-        match self.grid[point.1 as usize][point.0 as usize].particle_type {
+        match self.grid[point.y()][point.x()].particle_type {
             ParticleType::Air | ParticleType::Water => true,
             _ => false,
         }
