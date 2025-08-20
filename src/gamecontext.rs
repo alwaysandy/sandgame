@@ -162,9 +162,9 @@ impl GameContext {
             }
 
             // Randomly choose between going downleft or downright
-            if let Some(choice) = fastrand::choice(choices) {
-                self.swap_particle(&point, &choice);
-                self.add_updates(&point, &choice);
+            if let Some(choice) = fastrand::choice(&choices) {
+                self.swap_particle(&point, choice);
+                self.add_updates(&point, choice);
                 continue;
             }
 
@@ -173,21 +173,23 @@ impl GameContext {
                 _ => continue,
             }
 
-            if self.get_water_pressure(&point) >= 1 {
-                let mut choices: Vec<Point> = Vec::new();
-                if let Some(left) = self.get_next_free_space(&point, Point(-1, 0)) {
-                    choices.push(left);
-                }
+            if self.get_water_pressure(&point) < 1 {
+                continue;
+            }
 
-                if let Some(right) = self.get_next_free_space(&point, Point(1, 0)) {
-                    choices.push(right);
-                }
+            choices.clear();
+            if let Some(left) = self.get_next_free_space(&point, Point(-1, 0)) {
+                choices.push(left);
+            }
 
-                if let Some(new_point) = fastrand::choice(choices) {
-                    self.swap_particle(&point, &new_point);
-                    self.add_updates(&point, &new_point);
-                    continue;
-                }
+            if let Some(right) = self.get_next_free_space(&point, Point(1, 0)) {
+                choices.push(right);
+            }
+
+            if let Some(new_point) = fastrand::choice(choices) {
+                self.swap_particle(&point, &new_point);
+                self.add_updates(&point, &new_point);
+                continue;
             }
         }
     }
