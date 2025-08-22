@@ -83,10 +83,9 @@ impl GameContext {
     }
 
     fn move_particles(&mut self) {
-        self.to_update = self.next_update.clone();
-        self.to_update_set = self.next_update_set.clone();
-        self.next_update.clear();
-        self.next_update_set.clear();
+        self.to_update.append(&mut self.next_update);
+        self.to_update_set.clear();
+        self.to_update_set.extend(self.next_update_set.drain());
 
         while let Some(point) = self.to_update.pop() {
             if !self.to_update_set.contains(&point) {
