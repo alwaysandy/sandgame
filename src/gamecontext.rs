@@ -71,7 +71,7 @@ impl GameContext {
             | ParticleType::Water => {
                 self.grid[point.y()][point.x()] = Particle::air();
                 self.next_update_set.remove(&point);
-                self.propogate_updates(&point);
+                self.propagate_updates(&point);
             }
         }
 
@@ -239,10 +239,10 @@ impl GameContext {
     fn add_updates(&mut self, origin: &Point, new_point: &Point) {
         self.next_update.push(*new_point);
         self.next_update_set.insert(*new_point);
-        self.propogate_updates(origin);
+        self.propagate_updates(origin);
     }
 
-    fn propogate_updates(&mut self, point: &Point) {
+    fn propagate_updates(&mut self, point: &Point) {
         for y in 0..=2 {
             for x in -1..=1 {
                 if let Some(p) = *point + Point(x, y) {
