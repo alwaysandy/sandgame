@@ -98,7 +98,7 @@ impl GameContext {
                 _ => continue,
             }
 
-            if let Some(below) = point + Point(0, 1) {
+            if let Some(below) = point.below() {
                 match particle.particle_type {
                     ParticleType::Water => {
                         if self.is_air(&below) {
@@ -124,8 +124,8 @@ impl GameContext {
             }
 
             let mut choices: Vec<Point> = Vec::new();
-            if let Some(down_left) = point + Point(-1, 1)
-                && let Some(left) = point + Point(-1, 0)
+            if let Some(down_left) = point.down_right()
+                && let Some(left) = point.left()
             {
                 match particle.particle_type {
                     ParticleType::Water => {
@@ -141,8 +141,8 @@ impl GameContext {
                 }
             }
 
-            if let Some(down_right) = point + Point(1, 1)
-                && let Some(right) = point + Point(1, 0)
+            if let Some(down_right) = point.down_right()
+                && let Some(right) = point.right()
             {
                 match particle.particle_type {
                     ParticleType::Water => {
@@ -194,7 +194,7 @@ impl GameContext {
     fn get_water_pressure(&self, point: &Point) -> usize {
         let mut pressure = 0;
         let mut current_point = *point;
-        while let Some(next_point) = current_point + Point(0, -1)
+        while let Some(next_point) = current_point.above()
             && self.grid[next_point.y()][next_point.x()].particle_type == ParticleType::Water
         {
             pressure += 1;

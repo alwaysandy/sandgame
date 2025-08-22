@@ -14,6 +14,30 @@ impl Point {
     pub fn x(&self) -> usize {
         self.0 as usize
     }
+
+    pub fn left(&self) -> Option<Point> {
+        *self + Point(-1, 0)
+    }
+
+    pub fn right(&self) -> Option<Point> {
+        *self + Point(1, 0)
+    }
+
+    pub fn above(&self) -> Option<Point> {
+        *self + Point(0, -1)
+    }
+
+    pub fn below(&self) -> Option<Point> {
+        *self + Point(0, 1)
+    }
+
+    pub fn down_left(&self) -> Option<Point> {
+        *self + Point(-1, 1)
+    }
+
+    pub fn down_right(&self) -> Option<Point> {
+        *self + Point(1, 1)
+    }
 }
 
 impl Add for Point {
