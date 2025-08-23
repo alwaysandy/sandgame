@@ -170,7 +170,7 @@ impl GameContext {
                 _ => continue,
             }
 
-            if self.get_water_pressure(&point) < 1 {
+            if !self.hits_max_pressure(&point, 1) {
                 continue;
             }
 
@@ -191,17 +191,21 @@ impl GameContext {
         }
     }
 
-    fn get_water_pressure(&self, point: &Point) -> usize {
+    fn hits_max_pressure(&self, point: &Point, threshold: usize) -> bool {
         let mut pressure = 0;
         let mut current_point = *point;
         while let Some(next_point) = current_point.above()
             && self.grid[next_point.y()][next_point.x()].particle_type == ParticleType::Water
         {
             pressure += 1;
+            if pressure >= threshold {
+                return true;
+            }
+
             current_point.1 -= 1;
         }
 
-        pressure
+        false
     }
 
     fn get_next_free_space(&self, point: &Point, direction: Point) -> Option<Point> {
