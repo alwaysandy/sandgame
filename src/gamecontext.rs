@@ -1,12 +1,10 @@
 use crate::{GRID_X_SIZE, GRID_Y_SIZE, particle::*, point::*};
 
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::HashSet;
 
 pub struct GameContext {
-    to_update: BinaryHeap<Point>,
-    to_update_set: HashSet<Point>,
-    next_update: BinaryHeap<Point>,
-    next_update_set: HashSet<Point>,
+    to_update: Vec<Point>,
+    next_updates: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
     pub placing_particle: Particle,
     pub running: bool,
@@ -15,10 +13,8 @@ pub struct GameContext {
 impl Default for GameContext {
     fn default() -> Self {
         GameContext {
-            to_update: BinaryHeap::new(),
-            to_update_set: HashSet::new(),
-            next_update: BinaryHeap::new(),
-            next_update_set: HashSet::new(),
+            to_update: Vec::new(),
+            next_updates: HashSet::new(),
             grid: [[Particle::air(); GRID_X_SIZE]; GRID_Y_SIZE],
             placing_particle: Particle::sand(),
             running: true,
@@ -57,8 +53,7 @@ impl GameContext {
             ParticleType::Air => (),
         }
 
-        self.next_update.push(point);
-        self.next_update_set.insert(point);
+        self.next_updates.insert(point);
         true
     }
 
@@ -70,7 +65,7 @@ impl GameContext {
             | ParticleType::Concrete
             | ParticleType::Water => {
                 self.grid[point.y()][point.x()] = Particle::air();
-                self.next_update_set.remove(&point);
+                self.next_updates.remove(&point);
                 self.propagate_updates(&point);
             }
         }
@@ -83,15 +78,8 @@ impl GameContext {
     }
 
     fn move_particles(&mut self) {
-        self.to_update.append(&mut self.next_update);
-        self.to_update_set.clear();
-        self.to_update_set.extend(self.next_update_set.drain());
-
+        self.to_update.extend(self.next_updates.drain());
         while let Some(point) = self.to_update.pop() {
-            if !self.to_update_set.contains(&point) {
-                continue;
-            }
-
             let particle = self.grid[point.y()][point.x()];
             match particle.particle_physics {
                 ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => (),
@@ -241,26 +229,20 @@ impl GameContext {
     }
 
     fn add_updates(&mut self, origin: &Point, new_point: &Point) {
-        self.next_update.push(*new_point);
-        self.next_update_set.insert(*new_point);
+        self.next_updates.insert(*new_point);
         self.propagate_updates(origin);
     }
 
     fn propagate_updates(&mut self, point: &Point) {
-        for y in 0..=2 {
+        for y in -1..=2 {
             for x in -1..=1 {
                 if let Some(p) = *point + Point(x, y) {
-                    if self.next_update_set.contains(&p) {
-                        continue;
-                    }
-
                     match self.grid[p.y()][p.x()].particle_physics {
                         ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => {}
                         ParticlePhysics::None => continue,
                     }
 
-                    self.next_update.push(p);
-                    self.next_update_set.insert(p);
+                    self.next_updates.insert(p);
                 }
             }
         }
