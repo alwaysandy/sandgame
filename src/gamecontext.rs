@@ -124,7 +124,7 @@ impl GameContext {
             }
 
             let mut choices: Vec<Point> = Vec::new();
-            if let Some(down_left) = point.down_right()
+            if let Some(down_left) = point.down_left()
                 && let Some(left) = point.left()
             {
                 match particle.particle_type {
