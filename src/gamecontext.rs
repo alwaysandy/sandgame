@@ -170,7 +170,7 @@ impl GameContext {
         let mut current_point = *point;
         while let Some(next_point) = current_point + direction {
             if self.grid[next_point.y()][next_point.x()].particle_type == ParticleType::Water {
-                current_point = (current_point + direction).unwrap();
+                current_point = next_point;
                 continue;
             }
 
@@ -216,6 +216,13 @@ impl GameContext {
                 }
             }
         }
+    }
+
+    fn is_air(&self, point: &Point) -> bool {
+        matches!(
+            self.grid[point.y()][point.x()].particle_type,
+            ParticleType::Air
+        )
     }
 
     fn can_move_into(&self, origin: &Point, point: &Point) -> bool {
