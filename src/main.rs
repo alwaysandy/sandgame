@@ -57,23 +57,23 @@ fn main() -> Result<(), String> {
                 Event::KeyDown {
                     keycode: Some(Keycode::A),
                     ..
-                } => context.placing_particle = Particle::default(),
+                } => context.placing_particle = Particle::Air,
                 Event::KeyDown {
                     keycode: Some(Keycode::C),
                     ..
-                } => context.placing_particle = Particle::concrete(),
+                } => context.placing_particle = Particle::Concrete,
                 Event::KeyDown {
                     keycode: Some(Keycode::S),
                     ..
-                } => context.placing_particle = Particle::sand(),
+                } => context.placing_particle = Particle::Sand,
                 Event::KeyDown {
                     keycode: Some(Keycode::W),
                     ..
-                } => context.placing_particle = Particle::wall(),
+                } => context.placing_particle = Particle::Wall,
                 Event::KeyDown {
                     keycode: Some(Keycode::F),
                     ..
-                } => context.placing_particle = Particle::water(),
+                } => context.placing_particle = Particle::Water,
                 Event::KeyDown {
                     keycode: Some(Keycode::P),
                     ..

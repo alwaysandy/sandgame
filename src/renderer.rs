@@ -35,7 +35,7 @@ impl<'t> Renderer<'t> {
                 for (y, line) in context.grid.iter().enumerate() {
                     for (x, particle) in line.iter().enumerate() {
                         let offset = y * pitch + x * 4;
-                        let colors: [u8; 3] = PARTICLE_COLORS[particle.particle_type as usize];
+                        let colors: [u8; 3] = PARTICLE_COLORS[*particle as usize];
                         buffer[offset + 0] = colors[2]; // B
                         buffer[offset + 1] = colors[1]; // G
                         buffer[offset + 2] = colors[0]; // R
