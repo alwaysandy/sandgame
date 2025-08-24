@@ -87,22 +87,10 @@ impl GameContext {
             }
 
             if let Some(below) = point.below() {
-                match particle.particle_type {
-                    ParticleType::Water => {
-                        if self.is_air(&below) {
-                            self.swap_particle(&point, &below);
-                            self.add_updates(&point, &below);
-                            continue;
-                        }
-                    }
-                    ParticleType::Sand | ParticleType::Wall => {
-                        if self.can_fill(&below) {
-                            self.swap_particle(&point, &below);
-                            self.add_updates(&point, &below);
-                            continue;
-                        }
-                    }
-                    _ => unreachable!(),
+                if self.can_move_into(&point, &below) {
+                    self.swap_particle(&point, &below);
+                    self.add_updates(&point, &below);
+                    continue;
                 }
             }
 
@@ -115,34 +103,16 @@ impl GameContext {
             if let Some(down_left) = point.down_left()
                 && let Some(left) = point.left()
             {
-                match particle.particle_type {
-                    ParticleType::Water => {
-                        if self.is_air(&down_left) && self.is_air(&left) {
-                            choices.push(down_left);
-                        }
-                    }
-                    _ => {
-                        if self.can_fill(&down_left) && self.can_fill(&left) {
-                            choices.push(down_left);
-                        }
-                    }
+                if self.can_move_into(&point, &left) && self.can_move_into(&point, &down_left) {
+                    choices.push(down_left);
                 }
             }
 
             if let Some(down_right) = point.down_right()
                 && let Some(right) = point.right()
             {
-                match particle.particle_type {
-                    ParticleType::Water => {
-                        if self.is_air(&down_right) && self.is_air(&right) {
-                            choices.push(down_right);
-                        }
-                    }
-                    _ => {
-                        if self.can_fill(&down_right) && self.can_fill(&right) {
-                            choices.push(down_right);
-                        }
-                    }
+                if self.can_move_into(&point, &right) && self.can_move_into(&point, &down_right) {
+                    choices.push(down_right);
                 }
             }
 
@@ -248,14 +218,16 @@ impl GameContext {
         }
     }
 
-    fn is_air(&self, point: &Point) -> bool {
-        self.grid[point.y()][point.x()].particle_type == ParticleType::Air
-    }
-
-    fn can_fill(&self, point: &Point) -> bool {
-        match self.grid[point.y()][point.x()].particle_type {
-            ParticleType::Air | ParticleType::Water => true,
-            _ => false,
+    fn can_move_into(&self, origin: &Point, point: &Point) -> bool {
+        match self.grid[origin.y()][origin.x()].particle_type {
+            ParticleType::Water => matches!(
+                self.grid[point.y()][point.x()].particle_type,
+                ParticleType::Air
+            ),
+            _ => matches!(
+                self.grid[point.y()][point.x()].particle_type,
+                ParticleType::Air | ParticleType::Water
+            ),
         }
     }
 }
