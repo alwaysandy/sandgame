@@ -37,21 +37,13 @@ impl GameContext {
     }
 
     fn place_particle(&mut self, point: Point) -> bool {
-        if !self.is_air(&point) {
+        if !self.is_air(&point)
+            || matches!(self.placing_particle, Particle::Air | Particle::Concrete)
+        {
             return false;
         }
 
-        match self.placing_particle {
-            Particle::Wall => self.grid[point.y()][point.x()] = Particle::Wall,
-            Particle::Sand => self.grid[point.y()][point.x()] = Particle::Sand,
-            Particle::Water => self.grid[point.y()][point.x()] = Particle::Water,
-            Particle::Concrete => {
-                self.grid[point.y()][point.x()] = Particle::Concrete;
-                return true;
-            }
-            Particle::Air => (),
-        }
-
+        self.grid[point.y()][point.x()] = self.placing_particle;
         self.next_updates.insert(point);
         true
     }
