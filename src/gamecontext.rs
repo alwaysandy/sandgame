@@ -27,7 +27,7 @@ impl GameContext {
         GameContext::default()
     }
 
-    pub fn add_particle(&mut self, point: Point) -> bool {
+    pub fn add_particle(&mut self, point: Point) {
         match self.placing_particle {
             Particle::Sand | Particle::Wall | Particle::Concrete | Particle::Water => {
                 self.place_particle(point)
@@ -36,29 +36,25 @@ impl GameContext {
         }
     }
 
-    fn place_particle(&mut self, point: Point) -> bool {
+    fn place_particle(&mut self, point: Point) {
         if !self.is_air(&point)
             || matches!(self.placing_particle, Particle::Air | Particle::Concrete)
         {
-            return false;
+            return;
         }
 
         self.grid[point.y()][point.x()] = self.placing_particle;
         self.next_updates.insert(point);
-        true
     }
 
-    fn delete_particle(&mut self, point: Point) -> bool {
-        match self.grid[point.y()][point.x()] {
-            Particle::Air => (),
-            Particle::Sand | Particle::Wall | Particle::Concrete | Particle::Water => {
-                self.grid[point.y()][point.x()] = Particle::Air;
-                self.next_updates.remove(&point);
-                self.propagate_updates(&point);
-            }
+    fn delete_particle(&mut self, point: Point) {
+        if matches!(self.grid[point.y()][point.x()], Particle::Air) {
+            return;
         }
 
-        true
+        self.grid[point.y()][point.x()] = Particle::Air;
+        self.next_updates.remove(&point);
+        self.propagate_updates(&point);
     }
 
     pub fn next_tick(&mut self) {
