@@ -38,7 +38,7 @@ impl GameContext {
 
     fn place_particle(&mut self, point: Point) {
         if !self.is_air(&point)
-            || matches!(self.placing_particle, Particle::Air | Particle::Concrete)
+            || matches!(self.placing_particle, Particle::Air)
         {
             return;
         }
