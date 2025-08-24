@@ -29,10 +29,9 @@ impl GameContext {
 
     pub fn add_particle(&mut self, point: Point) -> bool {
         match self.placing_particle {
-            Particle::Sand
-            | Particle::Wall
-            | Particle::Concrete
-            | Particle::Water => self.place_particle(point),
+            Particle::Sand | Particle::Wall | Particle::Concrete | Particle::Water => {
+                self.place_particle(point)
+            }
             Particle::Air => self.delete_particle(point),
         }
     }
@@ -60,10 +59,7 @@ impl GameContext {
     fn delete_particle(&mut self, point: Point) -> bool {
         match self.grid[point.y()][point.x()] {
             Particle::Air => (),
-            Particle::Sand
-            | Particle::Wall
-            | Particle::Concrete
-            | Particle::Water => {
+            Particle::Sand | Particle::Wall | Particle::Concrete | Particle::Water => {
                 self.grid[point.y()][point.x()] = Particle::Air;
                 self.next_updates.remove(&point);
                 self.propagate_updates(&point);
@@ -86,12 +82,12 @@ impl GameContext {
                 _ => continue,
             }
 
-            if let Some(below) = point.below() {
-                if self.can_move_into(&point, &below) {
-                    self.swap_particle(&point, &below);
-                    self.add_updates(&point, &below);
-                    continue;
-                }
+            if let Some(below) = point.below()
+                && self.can_move_into(&point, &below)
+            {
+                self.swap_particle(&point, &below);
+                self.add_updates(&point, &below);
+                continue;
             }
 
             match self.grid[point.y()][point.x()].physics() {
@@ -102,18 +98,18 @@ impl GameContext {
             let mut choices: Vec<Point> = Vec::new();
             if let Some(down_left) = point.down_left()
                 && let Some(left) = point.left()
+                && self.can_move_into(&point, &left)
+                && self.can_move_into(&point, &down_left)
             {
-                if self.can_move_into(&point, &left) && self.can_move_into(&point, &down_left) {
-                    choices.push(down_left);
-                }
+                choices.push(down_left);
             }
 
             if let Some(down_right) = point.down_right()
                 && let Some(right) = point.right()
+                && self.can_move_into(&point, &right)
+                && self.can_move_into(&point, &down_right)
             {
-                if self.can_move_into(&point, &right) && self.can_move_into(&point, &down_right) {
-                    choices.push(down_right);
-                }
+                choices.push(down_right);
             }
 
             // Randomly choose between going downleft or downright
@@ -219,18 +215,12 @@ impl GameContext {
     }
 
     fn is_air(&self, point: &Point) -> bool {
-        matches!(
-            self.grid[point.y()][point.x()],
-            Particle::Air
-        )
+        matches!(self.grid[point.y()][point.x()], Particle::Air)
     }
 
     fn can_move_into(&self, origin: &Point, point: &Point) -> bool {
         match self.grid[origin.y()][origin.x()] {
-            Particle::Water => matches!(
-                self.grid[point.y()][point.x()],
-                Particle::Air
-            ),
+            Particle::Water => matches!(self.grid[point.y()][point.x()], Particle::Air),
             _ => matches!(
                 self.grid[point.y()][point.x()],
                 Particle::Air | Particle::Water
