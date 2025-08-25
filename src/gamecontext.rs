@@ -1,9 +1,9 @@
 use crate::{GRID_X_SIZE, GRID_Y_SIZE, particle::*, point::*};
 
-use std::collections::HashSet;
+use std::collections::{BinaryHeap, HashSet};
 
 pub struct GameContext {
-    to_update: Vec<Point>,
+    to_update: BinaryHeap<Point>,
     next_updates: HashSet<Point>,
     pub grid: [[Particle; GRID_X_SIZE]; GRID_Y_SIZE],
     pub placing_particle: Particle,
@@ -13,7 +13,7 @@ pub struct GameContext {
 impl Default for GameContext {
     fn default() -> Self {
         GameContext {
-            to_update: Vec::new(),
+            to_update: BinaryHeap::new(),
             next_updates: HashSet::new(),
             grid: [[Particle::Air; GRID_X_SIZE]; GRID_Y_SIZE],
             placing_particle: Particle::Sand,
@@ -187,7 +187,7 @@ impl GameContext {
     }
 
     fn propagate_updates(&mut self, point: &Point) {
-        for y in -1..=2 {
+        for y in -1..=1 {
             for x in -1..=1 {
                 if let Some(p) = *point + Point(x, y) {
                     self.next_updates.insert(p);
