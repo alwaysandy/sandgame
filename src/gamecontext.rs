@@ -37,9 +37,7 @@ impl GameContext {
     }
 
     fn place_particle(&mut self, point: Point) {
-        if !self.is_air(&point)
-            || matches!(self.placing_particle, Particle::Air)
-        {
+        if !self.is_air(&point) || matches!(self.placing_particle, Particle::Air) {
             return;
         }
 
@@ -185,17 +183,13 @@ impl GameContext {
     fn add_updates(&mut self, origin: &Point, new_point: &Point) {
         self.next_updates.insert(*new_point);
         self.propagate_updates(origin);
+        self.propagate_updates(new_point);
     }
 
     fn propagate_updates(&mut self, point: &Point) {
         for y in -1..=2 {
             for x in -1..=1 {
                 if let Some(p) = *point + Point(x, y) {
-                    match self.grid[p.y()][p.x()].physics() {
-                        ParticlePhysics::Sand | ParticlePhysics::Wall | ParticlePhysics::Water => {}
-                        ParticlePhysics::None => continue,
-                    }
-
                     self.next_updates.insert(p);
                 }
             }
