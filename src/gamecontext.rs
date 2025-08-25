@@ -166,18 +166,9 @@ impl GameContext {
     }
 
     fn swap_particle(&mut self, orig_point: &Point, new_point: &Point) {
-        let particle = self.grid[orig_point.y()][orig_point.x()];
-        match self.grid[new_point.y()][new_point.x()] {
-            Particle::Air => {
-                self.grid[orig_point.y()][orig_point.x()] = Particle::Air;
-                self.grid[new_point.y()][new_point.x()] = particle;
-            }
-            Particle::Water => {
-                self.grid[orig_point.y()][orig_point.x()] = Particle::Water;
-                self.grid[new_point.y()][new_point.x()] = particle;
-            }
-            _ => unreachable!(),
-        }
+        let temp = self.grid[orig_point.y()][orig_point.x()];
+        self.grid[orig_point.y()][orig_point.x()] = self.grid[new_point.y()][new_point.x()];
+        self.grid[new_point.y()][new_point.x()] = temp;
     }
 
     fn add_updates(&mut self, origin: &Point, new_point: &Point) {
