@@ -142,7 +142,7 @@ impl GameContext {
                 return true;
             }
 
-            current_point.1 -= 1;
+            current_point = next_point;
         }
 
         false
@@ -172,7 +172,6 @@ impl GameContext {
     }
 
     fn add_updates(&mut self, origin: &Point, new_point: &Point) {
-        self.next_updates.insert(*new_point);
         self.propagate_updates(origin);
         self.propagate_updates(new_point);
     }
@@ -181,6 +180,10 @@ impl GameContext {
         for y in -1..=1 {
             for x in -1..=1 {
                 if let Some(p) = *point + Point(x, y) {
+                    if matches!(self.grid[p.y()][p.x()], Particle::Air | Particle::Concrete) {
+                        continue;
+                    }
+
                     self.next_updates.insert(p);
                 }
             }
